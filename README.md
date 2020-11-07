@@ -6,7 +6,7 @@ This is the top level repository for Ariadne code.  More information on using th
 
 1. Build WALA 1.5.6-SNAPSHOT
 
-   需要禁用GoogleJavaFormat
+   disable GoogleJavaFormat if build failed
 
    ```
    git clone https://github.com/wala/WALA.git
