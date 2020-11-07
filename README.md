@@ -18,7 +18,7 @@ This is the top level repository for Ariadne code.  More information on using th
    ( I think the build process of the upstream is a mess. So I had to reconstruct a new project called "python-frontend". However, I only reconstructed a few part of them )
 
    ```
-   cd cast-python
+   cd python-frontend
    mvn clean package
    ```
 
