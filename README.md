@@ -13,17 +13,23 @@ This is the top level repository for Ariadne code.  More information on using th
    gradle publishToMavenLocal # mvn is deprecated
    ```
 
-2. Build IDE
+2. Build Ariadne
+
+   ( I think the build process of the upstream is a mess. So I had to reconstruct a new project called "python-frontend". However, I only reconstructed a few part of them )
 
    ```
-   git clone https://github.com/Anemone95/IDE.git
-   gradle publishToMavenLocal # mvn is deprecated
+   cd cast-python
+   mvn clean package
    ```
 
-3. Build Ariadne
+   Code demos are written as test case in `src/test/java/com/ibm/wala/cast/python/test`.
 
-   ```
-   gradle publishToMavenLocal # mvn is deprecated
-   ```
+# IDE
 
-   Run `TestCalls` in the `com.ibm.wala.cast.python.test` projects to test
+```bash
+git clone https://github.com/Anemone95/IDE.git
+gradle publishToMavenLocal # mvn is deprecated
+```
+
+
+
