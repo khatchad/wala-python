@@ -2,5 +2,5 @@ subprojects {
 }
 
 ext {
-    walaVersion = '1.5.4'
+    walaVersion = '1.5.6-SNAPSHOT'
 }
