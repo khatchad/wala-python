@@ -17,6 +17,7 @@
     <modules>
         <module>cast-python</module>
         <module>cast-python2</module>
+        <module>cast-python3</module>
     </modules>
     <dependencyManagement>
         <dependencies>
