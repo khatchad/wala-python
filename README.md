@@ -4,14 +4,15 @@ This is the top level repository for Ariadne code.  More information on using th
 
 # Build
 
-1. Build WALA 1.5.6-SNAPSHOT
-
-   disable GoogleJavaFormat if build failed
+1. Build Jython3
 
    ```
-   git clone https://github.com/wala/WALA.git
-   gradle publishToMavenLocal # mvn is deprecated
+   git clone https://github.com/juliandolby/jython3
+   cd jython3
+   ant
    ```
+
+   Copy `jython-dev.jar` to `cast-python3/libs/jython-dev.jar`
 
 2. Build Ariadne
 
