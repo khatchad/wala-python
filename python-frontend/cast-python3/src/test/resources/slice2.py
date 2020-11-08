@@ -1,17 +1,25 @@
-def foo(x):
+from typing import Callable
+
+
+def foo(x: int) -> int:
     return x
 
-def a(x):
+
+def a(x: Callable[[int], int]) -> int:
     return x(1)
 
-def b(x):
+
+def b(x: Callable[[int], int]) -> int:
     return x(2)
 
-def c(x):
+
+def c(x: Callable[[int], int]) -> int:
     return x(3)
 
-def d(x):
+
+def d(x: Callable[[int], int]) -> int:
     return x(4)
+
 
 L = [a, b, c, d]
 
@@ -31,4 +39,3 @@ print(ls[2](foo))
 
 lx = L[0:4]
 lx[1:3] = [a, b, c]
-
