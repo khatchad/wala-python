@@ -12,7 +12,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <wala.version>1.5.4</wala.version>
+        <wala.version>1.5.5</wala.version>
     </properties>
     <modules>
         <module>cast-python</module>
@@ -34,6 +34,11 @@
             <dependency>
                 <groupId>com.ibm.wala</groupId>
                 <artifactId>com.ibm.wala.core</artifactId>
+                <version>${wala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ibm.wala</groupId>
+                <artifactId>com.ibm.wala.cast</artifactId>
                 <version>${wala.version}</version>
             </dependency>
             <dependency>
