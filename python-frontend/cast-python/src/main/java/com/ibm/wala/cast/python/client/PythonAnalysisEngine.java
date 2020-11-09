@@ -75,7 +75,7 @@ public abstract class PythonAnalysisEngine<T>
 	private static Class<? extends PythonLoaderFactory> loaders;
 	
 	public static void setLoaderFactory(Class<? extends PythonLoaderFactory> lf) {
-		loaders = lf;
+ 		loaders = lf;
 	}
 	
 	private final PythonLoaderFactory loader;
@@ -85,6 +85,7 @@ public abstract class PythonAnalysisEngine<T>
 	public PythonAnalysisEngine() {
 		super();
 		PythonLoaderFactory f;
+		assert loaders==null: "PythonLoaderFactory is null";
 		try {
 			f = loaders.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
