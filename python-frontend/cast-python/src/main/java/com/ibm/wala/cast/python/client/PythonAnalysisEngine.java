@@ -85,12 +85,14 @@ public abstract class PythonAnalysisEngine<T>
 	public PythonAnalysisEngine() {
 		super();
 		PythonLoaderFactory f;
-		assert loaders==null: "PythonLoaderFactory is null";
 		try {
 			f = loaders.newInstance();
 		} catch (InstantiationException | IllegalAccessException e) {
 			f = null;
 			assert false : e.getMessage();
+		} catch (NullPointerException e){
+			f = null;
+			assert false : "PythonLoaderFactory is null";
 		}
 		loader = f;
 	}
