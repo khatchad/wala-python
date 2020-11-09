@@ -256,7 +256,8 @@ public abstract class PythonAnalysisEngine<T>
 		options.setSelector(
 			builtins.builtinClassTargetSelector(
 				options.getClassTargetSelector()));
-		
+
+		// 添加函数摘要, 如: <subprocess/function/call>
 		addSummaryBypassLogic(options, "flask.xml");
 		addSummaryBypassLogic(options, "pandas.xml");
 		addSummaryBypassLogic(options, "functools.xml");
