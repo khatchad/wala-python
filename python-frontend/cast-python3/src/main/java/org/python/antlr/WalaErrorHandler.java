@@ -1,5 +1,6 @@
 package org.python.antlr;
 
+import com.ibm.wala.cast.python3.parser.WalaPythonParser;
 import org.antlr.runtime.BaseRecognizer;
 import org.antlr.runtime.BitSet;
 import org.antlr.runtime.IntStream;
@@ -10,7 +11,6 @@ import org.python.antlr.base.mod;
 import org.python.antlr.base.slice;
 import org.python.antlr.base.stmt;
 
-import com.ibm.wala.cast.python.parser.WalaPythonParser;
 
 public class WalaErrorHandler implements ErrorHandler {
 	private final ErrorHandler base;

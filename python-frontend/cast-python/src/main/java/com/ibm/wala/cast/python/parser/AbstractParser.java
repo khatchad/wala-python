@@ -2,6 +2,7 @@ package com.ibm.wala.cast.python.parser;
 
 import java.util.Collection;
 
+import com.ibm.wala.cast.ir.translator.TranslatorToCAst;
 import com.ibm.wala.cast.python.ipa.summaries.BuiltinFunctions;
 import com.ibm.wala.cast.python.ir.PythonCAstToIRTranslator;
 import com.ibm.wala.cast.tree.CAst;
@@ -11,7 +12,7 @@ import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
 import com.ibm.wala.cast.tree.impl.CAstImpl;
 import com.ibm.wala.cast.tree.impl.CAstSymbolImpl;
 
-public abstract class AbstractParser<T> {
+public abstract class AbstractParser<T> implements TranslatorToCAst {
 
 	public static  String[] defaultImportNames = new String[] {
 			"__name__",

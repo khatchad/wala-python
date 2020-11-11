@@ -1,11 +1,11 @@
 package org.python.antlr;
 
+import com.ibm.wala.cast.python2.parser.WalaPythonParser;
 import org.python.antlr.base.expr;
 import org.python.antlr.base.mod;
 import org.python.antlr.base.slice;
 import org.python.antlr.base.stmt;
 
-import com.ibm.wala.cast.python.parser.WalaPythonParser;
 import org.python.antlr.runtime.*;
 
 public class WalaErrorHandler implements ErrorHandler {

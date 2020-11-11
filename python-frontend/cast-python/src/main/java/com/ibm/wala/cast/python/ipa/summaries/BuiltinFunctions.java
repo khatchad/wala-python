@@ -30,287 +30,293 @@ import com.ibm.wala.types.annotations.Annotation;
 import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.strings.Atom;
 
+/**
+ * 内建函数摘要
+ */
 public class BuiltinFunctions {
 
-	private final IClassHierarchy cha;
+    private final IClassHierarchy cha;
 
-	public BuiltinFunctions(IClassHierarchy cha) {
-		this.cha = cha;
-	}
+    public BuiltinFunctions(IClassHierarchy cha) {
+        this.cha = cha;
+    }
 
 
-	private static IMethod typeSummary(IClass cls, String name, TypeReference type) {
-		PythonSummary S = typeSummary(cls, builtinFunction(name), type); 
-		return new PythonSummarizedFunction((MethodReference) S.getMethod(), S, cls);
-	}
-	
-	private static PythonSummary typeSummary(IClass cls, TypeReference type, TypeReference returnedType) {
-		MethodReference ref = MethodReference.findOrCreate(type, AstMethodReference.fnSelector);
-		PythonSummary x = new PythonSummary(ref, 10);
-		
-		AstInstructionFactory factory = PythonLanguage.Python.instructionFactory();
-		x.addStatement(factory.NewInstruction(0, 11, NewSiteReference.make(0, returnedType)));
-		x.addStatement(factory.ReturnInstruction(1, 11, false));
-		
-		return x;
-	}
+    private static IMethod typeSummary(IClass cls, String name, TypeReference type) {
+        PythonSummary S = typeSummary(cls, builtinFunction(name), type);
+        return new PythonSummarizedFunction((MethodReference) S.getMethod(), S, cls);
+    }
 
-	private static IMethod argSummary(IClass cls, String name, int arg) {
-		PythonSummary S = argSummary(cls, builtinFunction(name), arg); 
-		return new PythonSummarizedFunction((MethodReference) S.getMethod(), S, cls);
-	}
-	
-	private static PythonSummary argSummary(IClass cls, TypeReference type, int arg) {
-		MethodReference ref = MethodReference.findOrCreate(type, AstMethodReference.fnSelector);
-		PythonSummary x = new PythonSummary(ref, 10);
-		
-		AstInstructionFactory factory = PythonLanguage.Python.instructionFactory();
-		x.addStatement(factory.ReturnInstruction(0, arg, false));
-		
-		return x;
-	}
+    private static PythonSummary typeSummary(IClass cls, TypeReference type, TypeReference returnedType) {
+        MethodReference ref = MethodReference.findOrCreate(type, AstMethodReference.fnSelector);
+        PythonSummary x = new PythonSummary(ref, 1);
 
-	private static IMethod noopSummary(IClass cls, String name) {
-		PythonSummary S = noopSummary(cls, builtinFunction(name)); 
-		return new PythonSummarizedFunction((MethodReference) S.getMethod(), S, cls);
-	}
-	
-	private static PythonSummary noopSummary(IClass cls, TypeReference type) {
-		MethodReference ref = MethodReference.findOrCreate(type, AstMethodReference.fnSelector);
-		PythonSummary x = new PythonSummary(ref, 10);
-		
-		AstInstructionFactory factory = PythonLanguage.Python.instructionFactory();
-		x.addStatement(factory.ReturnInstruction(0));
-		
-		return x;
-	}
+        AstInstructionFactory factory = PythonLanguage.Python.instructionFactory();
+        x.addStatement(factory.NewInstruction(0, 11, NewSiteReference.make(0, returnedType)));
+        x.addStatement(factory.ReturnInstruction(1, 11, false));
 
-	public static class BuiltinFunction implements IClass {
-		private final TypeReference ref;
-		private final IMethod builtinCode;
-		private final IClassHierarchy cha;
-		
-		public BuiltinFunction(IClassHierarchy cha, String name, TypeReference returnedType) {
-			this.cha = cha;
-			this.ref = builtinFunction(name);
-			this.builtinCode = returnedType==null? noopSummary(this, name): typeSummary(this, name, returnedType);
-		}
+        return x;
+    }
 
-		public BuiltinFunction(IClassHierarchy cha, String name, int arg) {
-			this.cha = cha;
-			this.ref = builtinFunction(name);
-			this.builtinCode = argSummary(this, name, arg);
-		}
+    private static IMethod argSummary(IClass cls, String name, int arg) {
+        PythonSummary S = argSummary(cls, builtinFunction(name), arg);
+        return new PythonSummarizedFunction((MethodReference) S.getMethod(), S, cls);
+    }
 
-		public BuiltinFunction(IClassHierarchy cha, String name) {
-			this(cha, name, null);
-		}
-		
-		@Override
-		public IClassHierarchy getClassHierarchy() {
-			return cha;
-		}
+    private static PythonSummary argSummary(IClass cls, TypeReference type, int retArgIndex) {
+        MethodReference ref = MethodReference.findOrCreate(type, AstMethodReference.fnSelector);
+        PythonSummary x = new PythonSummary(ref, 10);
 
-		@Override
-		public IClassLoader getClassLoader() {
-			return cha.getLoader(PythonTypes.pythonLoader);
-		}
+        AstInstructionFactory factory = PythonLanguage.Python.instructionFactory();
+        x.addStatement(factory.ReturnInstruction(0, retArgIndex, false));
 
-		@Override
-		public boolean isInterface() {
-			return false;
-		}
+        return x;
+    }
 
-		@Override
-		public boolean isAbstract() {
-			return false;
-		}
+    private static IMethod noopSummary(IClass cls, String name) {
+        PythonSummary S = noopSummary(cls, builtinFunction(name));
+        return new PythonSummarizedFunction((MethodReference) S.getMethod(), S, cls);
+    }
 
-		@Override
-		public boolean isPublic() {
-			return true;
-		}
+    private static PythonSummary noopSummary(IClass cls, TypeReference type) {
+        MethodReference ref = MethodReference.findOrCreate(type, AstMethodReference.fnSelector);
+        PythonSummary x = new PythonSummary(ref, 10);
 
-		@Override
-		public boolean isPrivate() {
-			return false;
-		}
+        AstInstructionFactory factory = PythonLanguage.Python.instructionFactory();
+        x.addStatement(factory.ReturnInstruction(0));
 
-		@Override
-		public boolean isSynthetic() {
-			return false;
-		}
+        return x;
+    }
 
-		@Override
-		public int getModifiers() throws UnsupportedOperationException {
-			return 0;
-		}
+    public static class BuiltinFunction implements IClass {
+        private final TypeReference ref;
+        private final IMethod builtinCode;
+        private final IClassHierarchy cha;
 
-		@Override
-		public IClass getSuperclass() {
-			return cha.lookupClass(PythonTypes.CodeBody);
-		}
+        public BuiltinFunction(IClassHierarchy cha, String name, TypeReference returnedType) {
+            this.cha = cha;
+            this.ref = builtinFunction(name);
+            this.builtinCode = returnedType == null ? noopSummary(this, name) : typeSummary(this, name, returnedType);
+        }
 
-		@Override
-		public Collection<? extends IClass> getDirectInterfaces() {
-			return Collections.emptySet();
-		}
+        public BuiltinFunction(IClassHierarchy cha, String name, int arg) {
+            this.cha = cha;
+            this.ref = builtinFunction(name);
+            this.builtinCode = argSummary(this, name, arg);
+        }
 
-		@Override
-		public Collection<IClass> getAllImplementedInterfaces() {
-			return Collections.emptySet();
-		}
+        public BuiltinFunction(IClassHierarchy cha, String name) {
+            this(cha, name, null);
+        }
 
-		@Override
-		public IMethod getMethod(Selector selector) {
-			return AstMethodReference.fnSelector.equals(selector)? builtinCode: null;
-		}
+        @Override
+        public IClassHierarchy getClassHierarchy() {
+            return cha;
+        }
 
-		  protected final Map<Atom, IField> declaredFields = HashMapFactory.make();
+        @Override
+        public IClassLoader getClassLoader() {
+            return cha.getLoader(PythonTypes.pythonLoader);
+        }
 
-		  @Override
-		  public IField getField(final Atom name) {
-		    IField x;
-		    if (declaredFields.containsKey(name)) {
-		      return declaredFields.get(name);
-		    } else if (getSuperclass() != null && (x = getSuperclass().getField(name)) != null) {
-		      return x;
-		    } else {
-		      declaredFields.put(name, new AstDynamicField(false, this, name, PythonTypes.Root));
+        @Override
+        public boolean isInterface() {
+            return false;
+        }
 
-		      return declaredFields.get(name);
-		    }
+        @Override
+        public boolean isAbstract() {
+            return false;
+        }
 
-		  }
+        @Override
+        public boolean isPublic() {
+            return true;
+        }
 
-		@Override
-		public IField getField(Atom name, TypeName type) {
-			return null;
-		}
+        @Override
+        public boolean isPrivate() {
+            return false;
+        }
 
-		@Override
-		public TypeReference getReference() {
-			return ref;
-		}
+        @Override
+        public boolean isSynthetic() {
+            return false;
+        }
 
-		@Override
-		public String getSourceFileName() throws NoSuchElementException {
-			// TODO Auto-generated method stub
-			return null;
-		}
+        @Override
+        public int getModifiers() throws UnsupportedOperationException {
+            return 0;
+        }
 
-		@Override
-		public Reader getSource() throws NoSuchElementException {
-			// TODO Auto-generated method stub
-			return null;
-		}
+        @Override
+        public IClass getSuperclass() {
+            return cha.lookupClass(PythonTypes.CodeBody);
+        }
 
-		@Override
-		public IMethod getClassInitializer() {
-			return null;
-		}
+        @Override
+        public Collection<? extends IClass> getDirectInterfaces() {
+            return Collections.emptySet();
+        }
 
-		@Override
-		public boolean isArrayClass() {
-			return false;
-		}
+        @Override
+        public Collection<IClass> getAllImplementedInterfaces() {
+            return Collections.emptySet();
+        }
 
-		@Override
-		public Collection<? extends IMethod> getDeclaredMethods() {
-			return Collections.singleton(builtinCode);
-		}
+        @Override
+        public IMethod getMethod(Selector selector) {
+            return AstMethodReference.fnSelector.equals(selector) ? builtinCode : null;
+        }
 
-		@Override
-		public Collection<IField> getAllInstanceFields() {
-			return Collections.emptySet();
-		}
+        protected final Map<Atom, IField> declaredFields = HashMapFactory.make();
 
-		@Override
-		public Collection<IField> getAllStaticFields() {
-			return Collections.emptySet();
-		}
+        @Override
+        public IField getField(final Atom name) {
+            IField x;
+            if (declaredFields.containsKey(name)) {
+                return declaredFields.get(name);
+            } else if (getSuperclass() != null && (x = getSuperclass().getField(name)) != null) {
+                return x;
+            } else {
+                declaredFields.put(name, new AstDynamicField(false, this, name, PythonTypes.Root));
 
-		@Override
-		public Collection<IField> getAllFields() {
-			return Collections.emptySet();
-		}
+                return declaredFields.get(name);
+            }
 
-		@Override
-		public Collection<? extends IMethod> getAllMethods() {
-			return Collections.singleton(builtinCode);
-		}
+        }
 
-		@Override
-		public Collection<IField> getDeclaredInstanceFields() {
-			return Collections.emptySet();
-		}
+        @Override
+        public IField getField(Atom name, TypeName type) {
+            return null;
+        }
 
-		@Override
-		public Collection<IField> getDeclaredStaticFields() {
-			return Collections.emptySet();
-		}
+        @Override
+        public TypeReference getReference() {
+            return ref;
+        }
 
-		@Override
-		public TypeName getName() {
-			return ref.getName();
-		}
+        @Override
+        public String getSourceFileName() throws NoSuchElementException {
+            // TODO Auto-generated method stub
+            return null;
+        }
 
-		@Override
-		public boolean isReferenceType() {
-			return true;
-		}
+        @Override
+        public Reader getSource() throws NoSuchElementException {
+            // TODO Auto-generated method stub
+            return null;
+        }
 
-		@Override
-		public Collection<Annotation> getAnnotations() {
-			return Collections.emptySet();
-		}
-		
-	}
+        @Override
+        public IMethod getClassInitializer() {
+            return null;
+        }
 
-	public static TypeReference builtinFunction(String name) {
-		return TypeReference.findOrCreate(PythonTypes.pythonLoader, "Lwala/builtin/" + name);
-	}
+        @Override
+        public boolean isArrayClass() {
+            return false;
+        }
 
-	private static final Map<String,Either<TypeReference,Integer>> builtinFunctions = HashMapFactory.make();
-	
-	static {
+        @Override
+        public Collection<? extends IMethod> getDeclaredMethods() {
+            return Collections.singleton(builtinCode);
+        }
+
+        @Override
+        public Collection<IField> getAllInstanceFields() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Collection<IField> getAllStaticFields() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Collection<IField> getAllFields() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Collection<? extends IMethod> getAllMethods() {
+            return Collections.singleton(builtinCode);
+        }
+
+        @Override
+        public Collection<IField> getDeclaredInstanceFields() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public Collection<IField> getDeclaredStaticFields() {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public TypeName getName() {
+            return ref.getName();
+        }
+
+        @Override
+        public boolean isReferenceType() {
+            return true;
+        }
+
+        @Override
+        public Collection<Annotation> getAnnotations() {
+            return Collections.emptySet();
+        }
+
+    }
+
+    public static TypeReference builtinFunction(String name) {
+        return TypeReference.findOrCreate(PythonTypes.pythonLoader, "Lwala/builtin/" + name);
+    }
+
+    private static final Map<String, Either<TypeReference, Integer>> builtinFunctions = HashMapFactory.make();
+
+    static {
 //		builtinFunctions.put("enumerate", Either.forLeft(PythonTypes.enumerate));
-		builtinFunctions.put("enumerate", Either.forRight(2));
-		builtinFunctions.put("int", Either.forLeft(TypeReference.Int));
-		builtinFunctions.put("len", Either.forLeft(TypeReference.Int));
-		builtinFunctions.put("list", Either.forLeft(PythonTypes.list));
-		builtinFunctions.put("range", Either.forLeft(PythonTypes.list));
-		builtinFunctions.put("sorted", Either.forLeft(PythonTypes.list));
-		builtinFunctions.put("str", Either.forLeft(PythonTypes.string));
-		builtinFunctions.put("sum", Either.forLeft(TypeReference.Int));
-		builtinFunctions.put("type", Either.forLeft(PythonTypes.object));
-		builtinFunctions.put("zip", Either.forLeft(PythonTypes.list));
-		builtinFunctions.put("slice", Either.forRight(2));
-	}
+        // Either Left定义新的对象（相当于new），Right定义新函数
+        builtinFunctions.put("enumerate", Either.forRight(2));
+        builtinFunctions.put("int", Either.forLeft(TypeReference.Int));
+        builtinFunctions.put("len", Either.forLeft(TypeReference.Int));
+        builtinFunctions.put("list", Either.forLeft(PythonTypes.list));
+        builtinFunctions.put("range", Either.forLeft(PythonTypes.list));
+        builtinFunctions.put("sorted", Either.forLeft(PythonTypes.list));
+        // FIXME str多态，str() 为定义新对象，str(x) 为定义新函数
+        builtinFunctions.put("str", Either.forLeft(PythonTypes.string));
+        builtinFunctions.put("str", Either.forRight(2));
+        builtinFunctions.put("sum", Either.forLeft(TypeReference.Int));
+        builtinFunctions.put("type", Either.forLeft(PythonTypes.object));
+        builtinFunctions.put("zip", Either.forLeft(PythonTypes.list));
+        builtinFunctions.put("slice", Either.forRight(2));
+    }
 
-	public static Set<String> builtins() {
-		return builtinFunctions.keySet();
-	}
-	
-	public ClassTargetSelector builtinClassTargetSelector(ClassTargetSelector current) {
-		Map<TypeReference,IClass> builtins = HashMapFactory.make();
-		builtinFunctions.entrySet().forEach((bf) -> {
-			Either<TypeReference, Integer> v = bf.getValue();
-			builtins.put(builtinFunction(bf.getKey()), 
-				v.isLeft()?
-					new BuiltinFunction(cha, bf.getKey(), v.getLeft()):
-					new BuiltinFunction(cha, bf.getKey(), v.getRight()));
-		});
-		
-		return new ClassTargetSelector() {
-			@Override
-			public IClass getAllocatedTarget(CGNode caller, NewSiteReference site) {
-				if (builtins.containsKey(site.getDeclaredType())) {
-					return builtins.get(site.getDeclaredType());
-				} else {
-					return current.getAllocatedTarget(caller, site);
-				}
-			}
-		};
-	}
+    public static Set<String> builtins() {
+        return builtinFunctions.keySet();
+    }
+
+    public ClassTargetSelector builtinClassTargetSelector(ClassTargetSelector current) {
+        Map<TypeReference, IClass> builtins = HashMapFactory.make();
+        builtinFunctions.entrySet().forEach((bf) -> {
+            Either<TypeReference, Integer> v = bf.getValue();
+            builtins.put(builtinFunction(bf.getKey()),
+                    v.isLeft() ?
+                            new BuiltinFunction(cha, bf.getKey(), v.getLeft()) :
+                            new BuiltinFunction(cha, bf.getKey(), v.getRight()));
+        });
+
+        return new ClassTargetSelector() {
+            @Override
+            public IClass getAllocatedTarget(CGNode caller, NewSiteReference site) {
+                if (builtins.containsKey(site.getDeclaredType())) {
+                    return builtins.get(site.getDeclaredType());
+                } else {
+                    return current.getAllocatedTarget(caller, site);
+                }
+            }
+        };
+    }
 }

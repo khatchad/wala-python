@@ -46,6 +46,7 @@ import com.ibm.wala.ipa.callgraph.propagation.PropagationCallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.ZeroXInstanceKeys;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.nCFAContextSelector;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
+import com.ibm.wala.ipa.cha.ClassHierarchyFactory;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.ipa.cha.SeqClassHierarchyFactory;
 import com.ibm.wala.ipa.summaries.BypassClassTargetSelector;
@@ -114,6 +115,7 @@ public abstract class PythonAnalysisEngine<T>
 	@Override
 	public IClassHierarchy buildClassHierarchy() {
 		try {
+//			IClassHierarchy cha = ClassHierarchyFactory.makeWithRoot(scope, loader);
 			IClassHierarchy cha = SeqClassHierarchyFactory.make(scope, loader);
 			Util.checkForFrontEndErrors(cha);
 			setClassHierarchy(cha);
