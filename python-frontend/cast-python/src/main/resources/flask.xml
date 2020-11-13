@@ -36,8 +36,8 @@
                 </method>
             </class>
             <class name="get" allocatable="true">
-                <method name="do" descriptor="()LRoot;" numArgs="2" paramNames="self value">
-                    <return value="value"/>
+                <method name="do" descriptor="()LRoot;" numArgs="6" paramNames="self a b c d e">
+                    <return value="self"/>
                 </method>
             </class>
         </package>

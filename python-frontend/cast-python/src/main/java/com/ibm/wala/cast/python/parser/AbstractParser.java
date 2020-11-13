@@ -25,25 +25,25 @@ public abstract class AbstractParser<T> implements TranslatorToCAst {
 			"del",
 		};
 
-	protected final CAst Ast = new CAstImpl();
+	public final CAst cast = new CAstImpl();
 
-	protected abstract class CAstVisitor {
+	public abstract class CAstVisitor {
 
 		protected void defaultImports(Collection<CAstNode> elts) {
 			for(String n : BuiltinFunctions.builtins()) {
 				elts.add(
 				notePosition(
-				    Ast.makeNode(CAstNode.DECL_STMT,
-						Ast.makeConstant(new CAstSymbolImpl(n, PythonCAstToIRTranslator.Any)),
-						Ast.makeNode(CAstNode.NEW, Ast.makeConstant("wala/builtin/" + n))), 
+				    cast.makeNode(CAstNode.DECL_STMT,
+						cast.makeConstant(new CAstSymbolImpl(n, PythonCAstToIRTranslator.Any)),
+						cast.makeNode(CAstNode.NEW, cast.makeConstant("wala/builtin/" + n))),
 				    CAstSourcePositionMap.NO_INFORMATION));			
 			}
 			for(String n : defaultImportNames) {
 				elts.add(
 						notePosition(
-					Ast.makeNode(CAstNode.DECL_STMT,
-						Ast.makeConstant(new CAstSymbolImpl(n, PythonCAstToIRTranslator.Any)),
-						Ast.makeNode(CAstNode.PRIMITIVE, Ast.makeConstant("import"), Ast.makeConstant(n))),
+					cast.makeNode(CAstNode.DECL_STMT,
+						cast.makeConstant(new CAstSymbolImpl(n, PythonCAstToIRTranslator.Any)),
+						cast.makeNode(CAstNode.PRIMITIVE, cast.makeConstant("import"), cast.makeConstant(n))),
 					    CAstSourcePositionMap.NO_INFORMATION));			
 			}
 		}

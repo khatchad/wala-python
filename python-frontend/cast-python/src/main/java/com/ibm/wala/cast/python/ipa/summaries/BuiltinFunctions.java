@@ -42,6 +42,13 @@ public class BuiltinFunctions {
     }
 
 
+    /**
+     * type 类型的函数摘要
+     * @param cls
+     * @param name
+     * @param type
+     * @return
+     */
     private static IMethod typeSummary(IClass cls, String name, TypeReference type) {
         PythonSummary S = typeSummary(cls, builtinFunction(name), type);
         return new PythonSummarizedFunction((MethodReference) S.getMethod(), S, cls);

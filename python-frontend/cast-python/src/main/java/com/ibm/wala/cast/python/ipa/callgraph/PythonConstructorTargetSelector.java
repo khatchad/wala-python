@@ -70,7 +70,8 @@ public class PythonConstructorTargetSelector implements MethodTargetSelector {
 						int orig_t = v++;
 						String typeName = r.getName().toString();
 						typeName = typeName.substring(typeName.lastIndexOf('/')+1);
-						FieldReference inner = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(typeName), PythonTypes.Root);
+						FieldReference inner = FieldReference.findOrCreate(PythonTypes.Root,
+								Atom.findOrCreateUnicodeAtom(typeName), PythonTypes.Root);
 
 						ctor.addStatement(insts.GetInstruction(pc, orig_t, 1, inner));
 						pc++;

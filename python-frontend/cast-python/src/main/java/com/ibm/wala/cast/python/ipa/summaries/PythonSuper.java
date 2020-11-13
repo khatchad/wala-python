@@ -288,6 +288,12 @@ public class PythonSuper {
 			}
 		}
 
+		/**
+		 * 获取调用参数
+		 * @param caller
+		 * @param site
+		 * @return
+		 */
 		@Override
 		public IntSet getRelevantParameters(CGNode caller, CallSiteReference site) {
 			SSAAbstractInvokeInstruction inst = caller.getIR().getCalls(site)[0];
@@ -310,6 +316,7 @@ public class PythonSuper {
 
 		@Override
 		public IMethod getCalleeTarget(CGNode caller, CallSiteReference site, IClass receiver) {
+		    //FIXME 无依赖的调用到不了这边
 			if (receiver != null && cha.lookupClass(PythonTypes.superfun).equals(receiver)) {
 				return superStub;
 			} else {

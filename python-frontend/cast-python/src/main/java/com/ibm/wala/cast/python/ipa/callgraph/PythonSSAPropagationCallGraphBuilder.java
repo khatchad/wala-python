@@ -156,6 +156,7 @@ public class PythonSSAPropagationCallGraphBuilder extends AstSSAPropagationCallG
 
 		@Override
 		public void visitPythonInvoke(PythonInvokeInstruction inst) {
+			// FIXME 调用黑盒函数
 	        visitInvokeInternal(inst, new DefaultInvariantComputer());
 		}
 

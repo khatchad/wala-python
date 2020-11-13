@@ -14,6 +14,7 @@ import java.io.IOException;
 
 import com.ibm.wala.cast.python3.parser.PythonModuleParser;
 import com.ibm.wala.cast.python3.util.Python3Interpreter;
+import com.ibm.wala.classLoader.IClass;
 import org.python.core.PyObject;
 
 import com.ibm.wala.cast.ir.translator.ConstantFoldingRewriter;
@@ -40,8 +41,10 @@ public class Python3Loader extends PythonLoader {
 	}
 
 	public Python3Loader(IClassHierarchy cha) {
+		// 初始化时cha为空
 		super(cha);
 	}
+
 
 	@Override
 	protected TranslatorToCAst getTranslatorToCAst(CAst ast, ModuleEntry M) throws IOException {
