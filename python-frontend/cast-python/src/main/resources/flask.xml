@@ -55,15 +55,15 @@
                           ref="x"
                           value="flask"/>
 
-                <new def="request" class="Lobject"/>
+                <new def="request" class="Lflask/class/request"/>
                 <putfield class="LRoot"
                           field="request"
-                          fieldType="LRoot"
+                          fieldType="Lflask/class/request"
                           ref="x"
                           value="request"/>
 
-                <new def="form" class="Lobject"/>
-                <putfield class="LRoot"
+                <new def="form" class="Lflask/class/form"/>
+                <putfield class="Lflask/class/request"
                           field="form"
                           fieldType="LRoot"
                           ref="request"
