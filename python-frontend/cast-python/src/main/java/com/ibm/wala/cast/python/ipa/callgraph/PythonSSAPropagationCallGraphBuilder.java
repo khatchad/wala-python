@@ -97,7 +97,27 @@ public class PythonSSAPropagationCallGraphBuilder extends AstSSAPropagationCallG
 			
 			return primitives.get(key);
 		}
-		
+
+		@Override
+		public void visitPutInternal(int rval, int ref, boolean isStatic, FieldReference field) {
+			// skip putfields of primitive type
+			// 当类型定义与实际不一致时，使用实际类型
+			if (field.getFieldType().isPrimitiveType()) {
+				return;
+			}
+			IField f = getClassHierarchy().resolveField(field);
+			if (f == null) {
+				return;
+			}
+			assert isStatic || !symbolTable.isStringConstant(ref)
+					: "put to string constant shouldn't be allowed?";
+			if (isStatic) {
+				processPutStatic(rval, field, f);
+			} else {
+				processPutField(rval, ref, f);
+			}
+		}
+
 		@Override
 		public void visitGet(SSAGetInstruction instruction) {
 		      SymbolTable symtab = ir.getSymbolTable();
