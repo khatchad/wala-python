@@ -12,7 +12,7 @@ class PythonCAstEntity extends AbstractScriptEntity {
     private final CAstNode cast;
     private final PythonParser.CAstVisitor visitor;
 
-    // FIXME: 纠正scriptname，考虑root文件夹
+    // FIXME: 纠正scriptname，relpath/name
     public PythonCAstEntity(PythonParser pythonParser, CAstType scriptType, PythonParser.WalkContext root, Module jythonAst, WalaPythonParser parser) throws Exception {
         super(pythonParser.scriptName(), scriptType);
         this.jythonAst = jythonAst;
@@ -43,7 +43,7 @@ class PythonCAstEntity extends AbstractScriptEntity {
 
     @Override
     public String getName() {
-        // TODO "script " + relPath / file.getName();
+        // TODO "script " + relpath/file.getName();
         return super.getName();
     }
 }

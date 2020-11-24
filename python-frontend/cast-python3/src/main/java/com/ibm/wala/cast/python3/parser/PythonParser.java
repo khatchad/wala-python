@@ -1944,6 +1944,7 @@ abstract public class PythonParser<T> extends AbstractParser<T> {
 			};
 			
 			WalkContext root = new RootContext(pythonAst);
+			// FIXME relpath/name
 			CAstEntity script = new PythonCAstEntity(this, scriptType, root, pythonAst, parser);
 			
 			return script;

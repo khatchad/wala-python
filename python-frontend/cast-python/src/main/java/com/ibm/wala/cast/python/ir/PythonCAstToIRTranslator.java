@@ -561,10 +561,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
             if (loader.lookupClass(TypeName.findOrCreate("Lscript " + name + ".py")) != null) {
                 FieldReference global = makeGlobalRef("script " + name + ".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
-            } else if (name.equals("multi4")){
-                FieldReference global = makeGlobalRef("script " + name + ".py");
-                context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
-            } else {
+            }  else {
                 TypeReference imprt = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + name);
                 MethodReference call = MethodReference.findOrCreate(imprt, "import", "()L" + primitiveCall.getChild(1).getValue());
                 context.cfg().addInstruction(Python.instructionFactory().InvokeInstruction(idx, resultVal, new int[0], context.currentScope().allocateTempValue(), CallSiteReference.make(idx, call, Dispatch.STATIC), null));
