@@ -291,4 +291,9 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
 		});
 	}
 
+
+	@Override
+	public IClass lookupClass(TypeName className) {
+		return super.lookupClass(className);
+	}
 }

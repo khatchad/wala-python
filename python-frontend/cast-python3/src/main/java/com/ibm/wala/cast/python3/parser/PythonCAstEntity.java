@@ -12,6 +12,7 @@ class PythonCAstEntity extends AbstractScriptEntity {
     private final CAstNode cast;
     private final PythonParser.CAstVisitor visitor;
 
+    // FIXME: 纠正scriptname，考虑root文件夹
     public PythonCAstEntity(PythonParser pythonParser, CAstType scriptType, PythonParser.WalkContext root, Module jythonAst, WalaPythonParser parser) throws Exception {
         super(pythonParser.scriptName(), scriptType);
         this.jythonAst = jythonAst;

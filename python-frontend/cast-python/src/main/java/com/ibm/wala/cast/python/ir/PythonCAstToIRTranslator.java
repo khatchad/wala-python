@@ -546,12 +546,22 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         return Any;
     }
 
+    /**
+     * 处理import语句
+     * @param resultVal
+     * @param context
+     * @param primitiveCall
+     */
     @Override
     protected void doPrimitive(int resultVal, WalkContext context, CAstNode primitiveCall) {
         if (primitiveCall.getChildCount() == 2 && "import".equals(primitiveCall.getChild(0).getValue())) {
             String name = (String) primitiveCall.getChild(1).getValue();
             int idx = context.cfg().getCurrentInstruction();
+            // FIXME 这里lookupClass有问题
             if (loader.lookupClass(TypeName.findOrCreate("Lscript " + name + ".py")) != null) {
+                FieldReference global = makeGlobalRef("script " + name + ".py");
+                context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
+            } else if (name.equals("multi4")){
                 FieldReference global = makeGlobalRef("script " + name + ".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
             } else {

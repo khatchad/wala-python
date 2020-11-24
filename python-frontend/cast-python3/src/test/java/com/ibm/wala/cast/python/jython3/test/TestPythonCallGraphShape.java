@@ -35,19 +35,16 @@ public abstract class TestPythonCallGraphShape extends TestCallGraphShape {
 	
 	static {
 		try {
-			Class<?> j3 = Class.forName("com.ibm.wala.cast.python.loader.Python3LoaderFactory");
+			Class<?> j3 = Class.forName("com.ibm.wala.cast.python3.loader.Python3LoaderFactory");
 			PythonAnalysisEngine.setLoaderFactory((Class<? extends PythonLoaderFactory>) j3);
-			Class<?> i3 = Class.forName("com.ibm.wala.cast.python.util.Python3Interpreter");
+			Class<?> i3 = Class.forName("com.ibm.wala.cast.python3.util.Python3Interpreter");
 			PythonInterpreter.setInterpreter((PythonInterpreter)i3.newInstance());
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-			try {
-				Class<?> j2 = Class.forName("com.ibm.wala.cast.python.loader.Python2LoaderFactory");
-				PythonAnalysisEngine.setLoaderFactory((Class<? extends PythonLoaderFactory>) j2);
-				Class<?> i2 = Class.forName("com.ibm.wala.cast.python.util.Python2Interpreter");
-				PythonInterpreter.setInterpreter((PythonInterpreter)i2.newInstance());
-			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e1) {
-				assert false : e.getMessage() + ", then " + e1.getMessage();
-			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
 		}
 	}
 	
