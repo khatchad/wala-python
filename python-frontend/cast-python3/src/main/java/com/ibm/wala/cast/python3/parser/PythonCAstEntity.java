@@ -41,4 +41,9 @@ class PythonCAstEntity extends AbstractScriptEntity {
         return null;
     }
 
+    @Override
+    public String getName() {
+        // TODO "script " + relPath / file.getName();
+        return super.getName();
+    }
 }
