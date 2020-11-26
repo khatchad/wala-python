@@ -56,7 +56,8 @@ public class TestMulti extends TestPythonCallGraphShape {
 
     @Test
     public void testMulti3() throws WalaException, IllegalArgumentException, CancelException, IOException {
-        PythonAnalysisEngine<?> engine = makeEngine("multi5.py", "pkg/multi6.py");
+        PythonAnalysisEngine<?> engine = makeEngine("D:/wala/wala-python/python-frontend/cast-python3/src/test/resources/multi5.py",
+                "D:/wala/wala-python/python-frontend/cast-python3/src/test/resources/pkg/multi6.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         CAstCallGraphUtil.AVOID_DUMP = false;
@@ -64,4 +65,14 @@ public class TestMulti extends TestPythonCallGraphShape {
         DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
     }
 
+    @Test
+    public void testMulti4() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("D:/wala/wala-python/python-frontend/cast-python3/src/test/resources/multi4.py",
+                "D:/wala/wala-python/python-frontend/cast-python3/src/test/resources/multi7.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
 }

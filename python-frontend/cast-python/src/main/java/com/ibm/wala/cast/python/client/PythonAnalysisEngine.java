@@ -1,15 +1,11 @@
 package com.ibm.wala.cast.python.client;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import com.ibm.wala.cast.ipa.callgraph.AstCFAPointerKeys;
 import com.ibm.wala.cast.ipa.callgraph.AstContextInsensitiveSSAContextInterpreter;
 import com.ibm.wala.cast.ir.ssa.AstIRFactory;
-import com.ibm.wala.cast.loader.AstDynamicField;
 import com.ibm.wala.cast.python.ipa.callgraph.PythonConstructorTargetSelector;
 import com.ibm.wala.cast.python.ipa.callgraph.PythonSSAPropagationCallGraphBuilder;
 import com.ibm.wala.cast.python.ipa.callgraph.PythonScopeMappingInstanceKeys;
@@ -17,18 +13,16 @@ import com.ibm.wala.cast.python.ipa.callgraph.PythonTrampolineTargetSelector;
 import com.ibm.wala.cast.python.ipa.summaries.BuiltinFunctions;
 import com.ibm.wala.cast.python.ipa.summaries.PythonComprehensionTrampolines;
 import com.ibm.wala.cast.python.ipa.summaries.PythonSuper;
-import com.ibm.wala.cast.python.ir.PythonLanguage;
+import com.ibm.wala.cast.python.loader.PythonAnalysisScope;
 import com.ibm.wala.cast.python.loader.PythonLoaderFactory;
+import com.ibm.wala.cast.python.loader.PythonSyntheticClass;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.types.AstMethodReference;
 import com.ibm.wala.cast.util.Util;
 import com.ibm.wala.classLoader.IClass;
-import com.ibm.wala.classLoader.IClassLoader;
-import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.Module;
 import com.ibm.wala.classLoader.ModuleEntry;
-import com.ibm.wala.classLoader.SyntheticClass;
 import com.ibm.wala.client.AbstractAnalysisEngine;
 import com.ibm.wala.ipa.callgraph.AnalysisCacheImpl;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
@@ -46,29 +40,23 @@ import com.ibm.wala.ipa.callgraph.propagation.PropagationCallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.ZeroXInstanceKeys;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.nCFAContextSelector;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
-import com.ibm.wala.ipa.cha.ClassHierarchyFactory;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.ipa.cha.SeqClassHierarchyFactory;
 import com.ibm.wala.ipa.summaries.BypassClassTargetSelector;
 import com.ibm.wala.ipa.summaries.BypassMethodTargetSelector;
 import com.ibm.wala.ipa.summaries.BypassSyntheticClassLoader;
 import com.ibm.wala.ipa.summaries.XMLMethodSummaryReader;
-import com.ibm.wala.shrikeBT.Constants;
 import com.ibm.wala.ssa.IRFactory;
 import com.ibm.wala.ssa.SSAOptions;
 import com.ibm.wala.ssa.SSAOptions.DefaultValues;
 import com.ibm.wala.ssa.SymbolTable;
-import com.ibm.wala.types.ClassLoaderReference;
 import com.ibm.wala.types.MethodReference;
-import com.ibm.wala.types.Selector;
 import com.ibm.wala.types.TypeName;
 import com.ibm.wala.types.TypeReference;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.WalaRuntimeException;
-import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.collections.HashSetFactory;
-import com.ibm.wala.util.strings.Atom;
 
 public abstract class PythonAnalysisEngine<T>
 		extends AbstractAnalysisEngine<InstanceKey, PythonSSAPropagationCallGraphBuilder, T> {
@@ -100,12 +88,7 @@ public abstract class PythonAnalysisEngine<T>
 
 	@Override
 	public void buildAnalysisScope() throws IOException {
-		scope = new AnalysisScope(Collections.singleton(PythonLanguage.Python)) { 
-			{
-				loadersByName.put(PythonTypes.pythonLoaderName, PythonTypes.pythonLoader);
-				loadersByName.put(SYNTHETIC, new ClassLoaderReference(SYNTHETIC, PythonLanguage.Python.getName(), PythonTypes.pythonLoader));
-			}
-		};
+		scope = new PythonAnalysisScope();
 		
 		for(Module o : moduleFiles) {
 			scope.addToScope(PythonTypes.pythonLoader, o);			
@@ -133,106 +116,7 @@ public abstract class PythonAnalysisEngine<T>
 		XMLMethodSummaryReader xml = new XMLMethodSummaryReader(getClass().getClassLoader().getResourceAsStream(summary), scope);
 		for(TypeReference t : xml.getAllocatableClasses()) {
 			BypassSyntheticClassLoader ldr = (BypassSyntheticClassLoader) cha.getLoader(scope.getSyntheticLoader());
-			ldr.registerClass(t.getName(), new SyntheticClass(t, cha) {
-				private final Map<Atom,IField> fields = HashMapFactory.make();
-
-				@Override
-				public IClassLoader getClassLoader() {
-					return cha.getLoader(cha.getScope().getSyntheticLoader());
-				}
-	
-				@Override
-				public boolean isPublic() {
-					return true;
-				}
-	
-				@Override
-				public boolean isPrivate() {
-					return false;
-				}
-	
-				@Override
-				public int getModifiers() throws UnsupportedOperationException {
-					return Constants.ACC_PUBLIC;
-				}
-	
-				@Override
-				public IClass getSuperclass() {
-					return cha.lookupClass(PythonTypes.CodeBody);
-				}
-	
-				@Override
-				public Collection<? extends IClass> getDirectInterfaces() {
-					return Collections.emptySet();
-				}
-	
-				@Override
-				public Collection<IClass> getAllImplementedInterfaces() {
-					return Collections.emptySet();
-				}
-	
-				@Override
-				public IMethod getMethod(Selector selector) {
-					// TODO Auto-generated method stub
-					return null;
-				}
-	
-				@Override
-				public IField getField(Atom name) {
-					if (! fields.containsKey(name)) {
-						fields.put(name, new AstDynamicField(false, cha.lookupClass(PythonTypes.Root), name, PythonTypes.Root));
-					}
-					return fields.get(name);
-				}
-	
-				@Override
-				public IMethod getClassInitializer() {
-					// TODO Auto-generated method stub
-					return null;
-				}
-	
-				@Override
-				public Collection<? extends IMethod> getDeclaredMethods() {
-					// TODO Auto-generated method stub
-					return null;
-				}
-	
-				@Override
-				public Collection<IField> getAllInstanceFields() {
-					return fields.values();
-				}
-	
-				@Override
-				public Collection<IField> getAllStaticFields() {
-					return Collections.emptySet();
-				}
-	
-				@Override
-				public Collection<IField> getAllFields() {
-					return fields.values();
-				}
-	
-				@Override
-				public Collection<? extends IMethod> getAllMethods() {
-					// TODO Auto-generated method stub
-					return null;
-				}
-	
-				@Override
-				public Collection<IField> getDeclaredInstanceFields() {
-					return fields.values();
-				}
-	
-				@Override
-				public Collection<IField> getDeclaredStaticFields() {
-					return Collections.emptySet();
-				}
-	
-				@Override
-				public boolean isReferenceType() {
-					return true;
-				}				
-			});
+			ldr.registerClass(t.getName(), new PythonSyntheticClass(t, cha));
 		}
 	
 		MethodTargetSelector targetSelector = options.getMethodTargetSelector();
@@ -265,6 +149,7 @@ public abstract class PythonAnalysisEngine<T>
 		addSummaryBypassLogic(options, "functools.xml");
 	}
 
+	// FIXME path/scriptname
 	private String scriptName(Module m) {
 		String path = ((ModuleEntry)m).getName();
 		return "Lscript " + (path.contains("/")? path.substring(path.lastIndexOf('/')+1): path);
