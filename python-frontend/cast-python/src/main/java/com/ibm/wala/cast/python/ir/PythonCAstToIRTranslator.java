@@ -12,13 +12,8 @@ package com.ibm.wala.cast.python.ir;
 
 import static com.ibm.wala.cast.python.ir.PythonLanguage.Python;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.nio.file.Path;
+import java.util.*;
 
 import com.ibm.wala.cast.ir.ssa.AssignInstruction;
 import com.ibm.wala.cast.ir.ssa.AstGlobalRead;
@@ -27,6 +22,8 @@ import com.ibm.wala.cast.ir.translator.ArrayOpHandler;
 import com.ibm.wala.cast.ir.translator.AstTranslator;
 import com.ibm.wala.cast.loader.AstMethod.DebuggingInformation;
 import com.ibm.wala.cast.loader.DynamicCallSiteReference;
+import com.ibm.wala.cast.python.global.ImportType;
+import com.ibm.wala.cast.python.global.SystemPath;
 import com.ibm.wala.cast.python.loader.DynamicAnnotatableEntity;
 import com.ibm.wala.cast.python.loader.PythonLoader;
 import com.ibm.wala.cast.python.ssa.PythonInvokeInstruction;
@@ -34,6 +31,7 @@ import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.tree.CAstEntity;
 import com.ibm.wala.cast.tree.CAstNode;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
+import com.ibm.wala.cast.tree.CAstSymbol;
 import com.ibm.wala.cast.tree.CAstType;
 import com.ibm.wala.cast.tree.impl.CAstControlFlowRecorder;
 import com.ibm.wala.cast.tree.impl.CAstOperator;
@@ -240,6 +238,14 @@ public class PythonCAstToIRTranslator extends AstTranslator {
     }
 
     @Override
+    protected void leaveObjectRef(CAstNode n, WalkContext c, CAstVisitor<WalkContext> visitor) {
+        WalkContext context = c;
+        int result = c.getValue(n);
+        CAstNode elt = n.getChild(1);
+        doFieldRead(context, result, c.getValue(n.getChild(0)), elt, n);
+    }
+
+    @Override
     protected void doFieldRead(WalkContext context, int result, int receiver, CAstNode elt, CAstNode parent) {
         int currentInstruction = context.cfg().getCurrentInstruction();
         if (elt.getKind() == CAstNode.CONSTANT && elt.getValue() instanceof String) {
@@ -325,10 +331,12 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         assert s.type() != null : "no type for " + nm + " at " + CAstPrinter.print(n, context.getSourceMap());
         TypeReference type = makeType(s.type());
         if (context.currentScope().isGlobal(s) || isGlobal(context, nm)) {
+            // 问题出在isGlobal
             c.setValue(n, doGlobalRead(n, context, nm, type));
         } else if (context.currentScope().isLexicallyScoped(s)) {
             c.setValue(n, doLexicallyScopedRead(n, context, nm, type));
         } else {
+            // `import a as b` 时走的是这里
             c.setValue(n, doLocalRead(context, nm, type));
         }
     }
@@ -451,7 +459,6 @@ public class PythonCAstToIRTranslator extends AstTranslator {
     }
 
     /**
-     *
      * @param context
      * @param call
      * @param result
@@ -548,25 +555,77 @@ public class PythonCAstToIRTranslator extends AstTranslator {
 
     /**
      * 处理import语句
+     *
      * @param resultVal
      * @param context
      * @param primitiveCall
      */
     @Override
     protected void doPrimitive(int resultVal, WalkContext context, CAstNode primitiveCall) {
-        if (primitiveCall.getChildCount() == 2 && "import".equals(primitiveCall.getChild(0).getValue())) {
-            String name = (String) primitiveCall.getChild(1).getValue();
-            int idx = context.cfg().getCurrentInstruction();
-            // FIXME 这里lookupClass有问题
-            if (loader.lookupClass(TypeName.findOrCreate("Lscript " + name + ".py")) != null) {
-                FieldReference global = makeGlobalRef("script " + name + ".py");
+
+        if (primitiveCall.getChildCount() == 2) {
+            String nameToken = (String) primitiveCall.getChild(1).getValue();
+            if (ImportType.BUILTIN.equals(primitiveCall.getChild(0).getValue())) {
+                int instNo = context.cfg().getCurrentInstruction();
+                TypeReference importType = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + nameToken);
+                MethodReference call = MethodReference.findOrCreate(importType, "import", "()L" + primitiveCall.getChild(1).getValue());
+                context.cfg().addInstruction(Python.instructionFactory().InvokeInstruction(instNo, resultVal, new int[0], context.currentScope().allocateTempValue(), CallSiteReference.make(instNo, call, Dispatch.STATIC), null));
+            } else if (ImportType.INIT.equals(primitiveCall.getChild(0).getValue())) {
+                Path importedPath = SystemPath.getInstance().getImportModule(context.file(), "." + nameToken);
+                FieldReference global = makeGlobalRef(
+                        "script " + importedPath.toUri().toString().replace("file:///", "file:/") + ".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
-            }  else {
-                TypeReference imprt = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + name);
-                MethodReference call = MethodReference.findOrCreate(imprt, "import", "()L" + primitiveCall.getChild(1).getValue());
-                context.cfg().addInstruction(Python.instructionFactory().InvokeInstruction(idx, resultVal, new int[0], context.currentScope().allocateTempValue(), CallSiteReference.make(idx, call, Dispatch.STATIC), null));
+            } else {
+                Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
+                FieldReference global = makeGlobalRef(
+                        "script " + importedPath.toUri().toString().replace("file:///", "file:/") + ".py");
+                context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
+            }
+
+        }
+    }
+
+    @Override
+    protected void leaveDeclStmt(CAstNode n, WalkContext context, CAstVisitor<WalkContext> visitor) {
+        // FIXME 当import pkg1.moduleD时，不将moduleD加入
+        Queue<CAstNode> workList = new LinkedList<>();
+        workList.add(n);
+        CAstNode importCAst = null;
+        while (!workList.isEmpty()) {
+            CAstNode curr = workList.poll();
+            if (curr.getKind() == CAstNode.PRIMITIVE && !curr.getChild(0).getValue().equals(ImportType.BUILTIN)) {
+                importCAst = curr;
+                workList.clear();
+                break;
+            }
+            workList.addAll(curr.getChildren());
+        }
+        if (n.getChild(1).getKind() == CAstNode.OBJECT_REF
+                && n.getChild(1).getChild(0).getKind() == CAstNode.VAR
+                && n.getChild(1).getChild(0).getChild(0).getValue() != null
+                && n.getChild(1).getChild(0).getChild(0).getValue().toString().startsWith("importTree")) {
+            // from x import y as declToken
+            String declToken = n.getChild(0).getValue().toString();
+            FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(declToken), PythonTypes.Root);
+            int declVal = context.getValue(n.getChild(1));
+            context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, declVal, fnField));
+        } else if (importCAst != null) {
+            // import x as declToken
+            String declToken = n.getChild(0).getValue().toString();
+            if (!declToken.startsWith("importTree")) {
+                FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(declToken), PythonTypes.Root);
+                int declVal = context.getValue(n.getChild(1));
+                context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, declVal, fnField));
+                // 当import xxx as b的时候，不declare
+                String declareField = n.getChild(1).getChild(1).getValue().toString();
+                if (declareField.equals(declToken)) {
+                    CAstSymbol pkgSymbol = new CAstSymbolImpl(importCAst.getChild(1).getValue().toString(), PythonCAstToIRTranslator.Any);
+                    context.currentScope().declare(pkgSymbol, context.getValue(importCAst));
+                }
             }
         }
+
+        super.leaveDeclStmt(n, context, visitor);
     }
 
     @Override

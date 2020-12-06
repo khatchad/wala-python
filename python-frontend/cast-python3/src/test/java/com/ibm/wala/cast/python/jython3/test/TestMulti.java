@@ -38,10 +38,10 @@ public class TestMulti extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("multi2.py", "multi1.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        verifyGraphAssertions(CG, assertionsMulti1);
         CAstCallGraphUtil.AVOID_DUMP = false;
         CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
         DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+        verifyGraphAssertions(CG, assertionsMulti1);
     }
 
     @Test
@@ -69,6 +69,66 @@ public class TestMulti extends TestPythonCallGraphShape {
     @Test
     public void testMulti4() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine("multi4.py", "multi7.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
+
+    @Test
+    public void testCase1() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("case1/moduleN.py", "case1/moduleO.py", "case1/moduleP.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
+
+    @Test
+    public void testCaseQ() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("pkg1/__init__.py", "pkg1/moduleD.py", "moduleQ.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
+
+    @Test
+    public void testCaseQ2() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("pkg1/__init__.py", "pkg1/moduleD.py", "moduleQ2.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
+
+    @Test
+    public void testCaseR1() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("pkg1/__init__.py", "pkg1/moduleD.py", "moduleR1.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
+
+    @Test
+    public void testCaseR2() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("pkg1/__init__.py", "pkg1/moduleD.py", "moduleR2.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
+
+    @Test
+    public void testCaseR3() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("pkg1/__init__.py", "pkg1/moduleD.py", "pkg1/subpkg1/__init__.py", "pkg1/subpkg1/moduleA.py","moduleR3.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         CAstCallGraphUtil.AVOID_DUMP = false;

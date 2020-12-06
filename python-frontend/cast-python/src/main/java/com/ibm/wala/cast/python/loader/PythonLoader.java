@@ -1,5 +1,8 @@
 package com.ibm.wala.cast.python.loader;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import com.ibm.wala.cast.ir.translator.AstTranslator.AstLexicalInformation;
@@ -7,9 +10,11 @@ import com.ibm.wala.cast.ir.translator.AstTranslator.WalkContext;
 import com.ibm.wala.cast.ir.translator.TranslatorToIR;
 import com.ibm.wala.cast.loader.AstMethod.DebuggingInformation;
 import com.ibm.wala.cast.loader.CAstAbstractModuleLoader;
+import com.ibm.wala.cast.python.global.SystemPath;
 import com.ibm.wala.cast.python.ir.PythonCAstToIRTranslator;
 import com.ibm.wala.cast.python.ir.PythonLanguage;
 import com.ibm.wala.cast.python.module.PyLibURLModule;
+import com.ibm.wala.cast.python.module.PyScriptModule;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.python.util.PathUtil;
 import com.ibm.wala.cast.tree.CAst;
@@ -95,7 +100,6 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
     private final CAst Ast = new CAstImpl();
     protected final CAstPattern sliceAssign = CAstPattern.parse("<top>ASSIGN(CALL(VAR(\"slice\"),<args>**),<value>*)");
 
-    private String[] rootPath;
     private Class<?> moduleClass;
 
     /**
@@ -105,41 +109,38 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
      */
     @Override
     public void init(final List<Module> modules) {
+
+        Path rootPath=null;
         for (Module module : modules) {
-            if (module instanceof PyLibURLModule){
-                continue;
-            }
-            Class<?> thisModuleClass = module.getClass();
-            if (moduleClass == null) {
-                moduleClass = thisModuleClass;
-            } else if (!moduleClass.equals(thisModuleClass)) {
-                System.err.println("[WARN] module type doesn't match, to ensure project root, plz use same module type");
-            }
-            for (Iterator<? extends ModuleEntry> it = module.getEntries(); it.hasNext(); ) {
-                ModuleEntry moduleEntry = it.next();
-                // 只能保证同一种来源
-                String s = moduleEntry.getName();
-                String[] path = s.split("/");
-                if (rootPath == null || rootPath.length > path.length) {
-                    rootPath = path;
+            if (module instanceof PyScriptModule){
+                Class<?> thisModuleClass = module.getClass();
+                if (moduleClass == null) {
+                    moduleClass = thisModuleClass;
+                } else if (!moduleClass.equals(thisModuleClass)) {
+                    System.err.println("[WARN] module type doesn't match, to ensure project root, plz use same module type");
                 }
+                for (Iterator<? extends ModuleEntry> it = module.getEntries(); it.hasNext(); ) {
+                    ModuleEntry moduleEntry = it.next();
+                    // 只能保证同一种来源
+                    Path modulePath = PathUtil.getPath(moduleEntry.getName());
+                    if (rootPath == null || rootPath.toString().length() > modulePath.getParent().toString().length()) {
+                        rootPath = modulePath.getParent();
+                    }
+                }
+            } else {
+                System.err.println("Not PyScriptModule");
             }
         }
 
-        rootPath = Arrays.copyOfRange(rootPath, 0, rootPath.length - 1);
+        SystemPath.getInstance().setAppPath(rootPath);
 
         for (Module module : modules) {
-            if (module instanceof PyLibURLModule){
-                // TODO lib库特殊处理
-                continue;
-            } else {
-                for (Iterator<? extends ModuleEntry> it = module.getEntries(); it.hasNext(); ) {
-                    ModuleEntry moduleEntry = it.next();
-                    String path = moduleEntry.getName();
-                    TypeName moduleName = TypeName.string2TypeName("Lscript " + PathUtil.relPath(path, rootPath));
-                    CoreClass tempPyScript = new CoreClass(moduleName, EmptyPyScript.getName(), this, null);
-                    types.put(moduleName, tempPyScript);
-                }
+            for (Iterator<? extends ModuleEntry> it = module.getEntries(); it.hasNext(); ) {
+                ModuleEntry moduleEntry = it.next();
+                String path = moduleEntry.getName();
+                TypeName moduleName = TypeName.string2TypeName("Lscript " + path);
+                CoreClass tempPyScript = new CoreClass(moduleName, EmptyPyScript.getName(), this, null);
+                types.put(moduleName, tempPyScript);
             }
         }
         super.init(modules);

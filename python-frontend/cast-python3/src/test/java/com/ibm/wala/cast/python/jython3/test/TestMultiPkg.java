@@ -47,7 +47,7 @@ public class TestMultiPkg extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine(
                 "pkg1/__init__.py",
                 "pkg1/moduleD.py",
-                "pkg1/moduleL.py");
+                "moduleL.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         CAstCallGraphUtil.AVOID_DUMP = false;
