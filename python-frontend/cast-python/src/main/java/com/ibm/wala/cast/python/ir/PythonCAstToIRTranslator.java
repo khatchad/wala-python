@@ -587,7 +587,6 @@ public class PythonCAstToIRTranslator extends AstTranslator {
 
     @Override
     protected void leaveDeclStmt(CAstNode n, WalkContext context, CAstVisitor<WalkContext> visitor) {
-        // FIXME 当import pkg1.moduleD时，不将moduleD加入
         Queue<CAstNode> workList = new LinkedList<>();
         workList.add(n);
         CAstNode importCAst = null;
@@ -606,11 +605,16 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 && n.getChild(1).getChild(0).getChild(0).getValue().toString().startsWith("importTree")) {
             // from x import y as declToken
             String declToken = n.getChild(0).getValue().toString();
-            FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(declToken), PythonTypes.Root);
-            int declVal = context.getValue(n.getChild(1));
-            context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, declVal, fnField));
+            if (declToken.equals("*")) {
+               ;
+            } else {
+                FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(declToken), PythonTypes.Root);
+                int declVal = context.getValue(n.getChild(1));
+                context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, declVal, fnField));
+            }
         } else if (importCAst != null) {
             // import x as declToken
+            // FIXME 当import pkg1.moduleD时，不将moduleD加入
             String declToken = n.getChild(0).getValue().toString();
             if (!declToken.startsWith("importTree")) {
                 FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(declToken), PythonTypes.Root);
