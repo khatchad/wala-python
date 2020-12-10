@@ -8,7 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *****************************************************************************/
-package com.ibm.wala.cast.python3.parser;
+package com.ibm.wala.cast.python2.parser;
 
 import java.io.File;
 import java.io.FileReader;
