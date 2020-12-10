@@ -48,7 +48,6 @@ import com.ibm.wala.shrikeBT.IBinaryOpInstruction;
 import com.ibm.wala.shrikeBT.IBinaryOpInstruction.IOperator;
 import com.ibm.wala.shrikeBT.IInvokeInstruction.Dispatch;
 import com.ibm.wala.ssa.SSAInstruction;
-import com.ibm.wala.ssa.SSAPhiInstruction;
 import com.ibm.wala.ssa.SymbolTable;
 import com.ibm.wala.types.FieldReference;
 import com.ibm.wala.types.MethodReference;
@@ -63,7 +62,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
 
     private final Map<CAstType, TypeName> walaTypeNames = HashMapFactory.make();
     private final Set<Pair<Scope, String>> globalDeclSet = new HashSet<>();
-    private final HashMap<String, Set<Integer>> file2starValues = new HashMap<>();
+    private final HashMap<String, Set<Integer>> name2starValues = new HashMap<>();
     private static boolean signleFileAnalysis = true;
 
     public PythonCAstToIRTranslator(IClassLoader loader, Map<Object, CAstEntity> namedEntityResolver,
@@ -251,8 +250,15 @@ public class PythonCAstToIRTranslator extends AstTranslator {
     protected void doFieldRead(WalkContext context, int result, int receiver, CAstNode elt, CAstNode parent) {
         int currentInstruction = context.cfg().getCurrentInstruction();
         if (elt.getKind() == CAstNode.CONSTANT && elt.getValue() instanceof String) {
-            FieldReference f = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom((String) elt.getValue()), PythonTypes.Root);
-            context.cfg().addInstruction(Python.instructionFactory().GetInstruction(currentInstruction, result, receiver, f));
+            if (elt.getValue().toString().equals("*")) {
+                // from a import *
+                Set<Integer> starValues = name2starValues.getOrDefault(context.getName(), new HashSet<>());
+                starValues.add(receiver);
+                name2starValues.put(context.getName(), starValues);
+            } else {
+                FieldReference f = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom((String) elt.getValue()), PythonTypes.Root);
+                context.cfg().addInstruction(Python.instructionFactory().GetInstruction(currentInstruction, result, receiver, f));
+            }
         } else {
             visit(elt, context, this);
             assert context.getValue(elt) != -1;
@@ -333,21 +339,33 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         assert s.type() != null : "no type for " + nm + " at " + CAstPrinter.print(n, context.getSourceMap());
         TypeReference type = makeType(s.type());
         if (context.currentScope().isGlobal(s) || isGlobal(context, nm)) {
-            // TODO 这里修复importstar
             int globalVal = doGlobalRead(n, context, nm, type);
-            if (nm.equals("funcO")) {
-                PreBasicBlock bb0 = context.cfg().getCurrentBlock();
-                PreBasicBlock bb1 = context.cfg().newBlock(true);
-                context.cfg().addEdge(bb0, bb1);
-                int fieldVal = context.currentScope().allocateTempValue();
-                FieldReference f = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(nm), PythonTypes.Root);
-                context.cfg().addInstruction(Python.instructionFactory().GetInstruction(context.cfg().getCurrentInstruction(), fieldVal, 41, f));
-                PreBasicBlock bb2 = context.cfg().newBlock(true);
-                context.cfg().addEdge(bb0, bb2);
+            Set<Integer> starValues = name2starValues.getOrDefault(context.getName(), new HashSet<>());
+            // TODO 这里修复 from x import *
+            if (!starValues.isEmpty()) {
                 int phiVal = context.currentScope().allocateTempValue();
-                SSAPhiInstruction phiInst = new SSAPhiInstruction(context.cfg().getCurrentInstruction(), phiVal, new int[]{globalVal, fieldVal});
-                context.cfg().addInstruction(phiInst);
+                PreBasicBlock prevBB = context.cfg().getCurrentBlock();
+                context.cfg().addInstruction(Python.instructionFactory().AssignInstruction(context.cfg().getCurrentInstruction(), phiVal, globalVal));
+                List<PreBasicBlock> possibleBBs = new LinkedList<>();
+                for (Integer eachValue : starValues) {
+                    PreBasicBlock nextBB = context.cfg().newBlock(true);
+                    int fieldVal = context.currentScope().allocateTempValue();
+                    FieldReference f = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(nm), PythonTypes.Root);
+                    context.cfg().addInstruction(
+                            Python.instructionFactory().GetInstruction(context.cfg().getCurrentInstruction(), fieldVal, eachValue, f));
+                    context.cfg().addInstruction(
+                            Python.instructionFactory().AssignInstruction(context.cfg().getCurrentInstruction(), phiVal, fieldVal));
+                    possibleBBs.add(nextBB);
+                }
+                PreBasicBlock nextBB = context.cfg().newBlock(true);
+                for (PreBasicBlock possibleBB: possibleBBs) {
+                    context.cfg().addEdge(prevBB, possibleBB);
+                    context.cfg().addEdge(possibleBB, nextBB);
+                }
+                context.cfg().addEdge(prevBB, nextBB);
                 c.setValue(n, phiVal);
+                FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(nm), PythonTypes.Root);
+                context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, phiVal, fnField));
             } else {
                 c.setValue(n, globalVal);
             }
@@ -624,9 +642,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
             // from x import y as declToken
             String declToken = n.getChild(0).getValue().toString();
             int declVal = context.getValue(n.getChild(1));
-            if (declToken.equals("*")) {
-                ;
-            } else {
+            if (!declToken.equals("*")) {
                 FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(declToken), PythonTypes.Root);
                 context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, declVal, fnField));
             }

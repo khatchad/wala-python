@@ -17,9 +17,35 @@ import java.io.IOException;
 public class TestMultiStar extends TestPythonCallGraphShape {
 
     @Test
-    public void testStar() throws WalaException, IllegalArgumentException, CancelException, IOException {
+    public void testStarN3() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
                 "caseStar/moduleN.py",
+                "caseStar/moduleN3.py",
+                "caseStar/moduleO.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
+
+    @Test
+    public void testStarN4() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine(
+                "caseStar/moduleN.py",
+                "caseStar/moduleN3.py",
+                "caseStar/moduleN4.py",
+                "caseStar/moduleO.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        CAstCallGraphUtil.AVOID_DUMP = false;
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+    }
+    @Test
+    public void testStarN2() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine(
+                "caseStar/moduleN2.py",
                 "caseStar/moduleO.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
