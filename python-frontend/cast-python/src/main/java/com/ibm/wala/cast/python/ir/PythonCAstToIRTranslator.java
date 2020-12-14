@@ -26,6 +26,7 @@ import com.ibm.wala.cast.python.global.ImportType;
 import com.ibm.wala.cast.python.global.SystemPath;
 import com.ibm.wala.cast.python.loader.DynamicAnnotatableEntity;
 import com.ibm.wala.cast.python.loader.PythonLoader;
+import com.ibm.wala.cast.python.parser.PythonCodeEntity;
 import com.ibm.wala.cast.python.ssa.PythonInvokeInstruction;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.tree.CAstEntity;
@@ -159,8 +160,13 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         }
 
         String fnName = composeEntityName(context, N);
+        // FIXME 修复classmethod
         if (N.getType() instanceof CAstType.Method) {
-            ((PythonLoader) loader).defineMethodType("L" + fnName, N.getPosition(), N, walaTypeNames.get(((CAstType.Method) N.getType()).getDeclaringType()), context);
+            if (N instanceof PythonCodeEntity){
+                ((PythonLoader) loader).defineMethodType("L" + fnName, N.getPosition(), N, walaTypeNames.get(((CAstType.Method) N.getType()).getDeclaringType()), context);
+            } else {
+                ((PythonLoader) loader).defineMethodType("L" + fnName, N.getPosition(), N, walaTypeNames.get(((CAstType.Method) N.getType()).getDeclaringType()), context);
+            }
         } else {
             ((PythonLoader) loader).defineFunctionType("L" + fnName, N.getPosition(), N, context);
         }

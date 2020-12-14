@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.ibm.wala.cast.python.parser.AbstractTransToCAst;
+import com.ibm.wala.cast.python.parser.PythonCodeEntity;
 import org.python.antlr.PythonTree;
 import org.python.antlr.ast.Assert;
 import org.python.antlr.ast.Assign;
@@ -929,11 +930,7 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
 				ai++;
 			}
 			
-			AbstractCodeEntity fun = new AbstractCodeEntity(functionType) {
-				@Override
-				public int getKind() {					
-					return CAstEntity.FUNCTION_ENTITY;
-				}
+			PythonCodeEntity fun = new PythonCodeEntity(functionType, new ArrayList<>(),functionName, argumentNames, defaultVars) {
 
 				@Override
 				public CAstNode getAST() {
@@ -969,32 +966,6 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
 							PythonParser.this.Ast.makeNode(CAstNode.BLOCK_EXPR, nodes));
 					
 					}
-				}
-
-				@Override
-				public String getName() {
-					return functionName;
-				}
-
-				@Override
-				public String[] getArgumentNames() {
-					return argumentNames;
-				}
-
-				@Override
-				public CAstNode[] getArgumentDefaults() {
-					return defaultVars;
-				}
-
-				@Override
-				public int getArgumentCount() {
-					return argumentNames.length;
-
-				}
-
-				@Override
-				public Collection<CAstQualifier> getQualifiers() {
-					return Collections.emptySet();
 				}
 
 				@Override

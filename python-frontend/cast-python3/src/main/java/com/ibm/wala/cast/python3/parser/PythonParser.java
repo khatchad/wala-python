@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.ibm.wala.cast.python.parser.AbstractTransToCAst;
+import com.ibm.wala.cast.python.parser.PythonCodeEntity;
 import com.ibm.wala.cast.tree.*;
 import org.python.antlr.PythonTree;
 import org.python.antlr.ast.Assert;
@@ -1046,20 +1047,10 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
                 ai++;
             }
 
-            class PythonCodeEntity extends AbstractCodeEntity implements DynamicAnnotatableEntity {
+            class Python3CodeEntity extends PythonCodeEntity {
 
-                @Override
-                public Iterable<CAstNode> dynamicAnnotations() {
-                    return dynamicAnnotations;
-                }
-
-                protected PythonCodeEntity(CAstType type) {
-                    super(type);
-                }
-
-                @Override
-                public int getKind() {
-                    return CAstEntity.FUNCTION_ENTITY;
+                protected Python3CodeEntity(CAstType type) {
+                    super(type, dynamicAnnotations, functionName, argumentNames, defaultVars);
                 }
 
                 @Override
@@ -1094,34 +1085,7 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
                     } else {
                         return PythonParser.this.cast.makeNode(CAstNode.RETURN,
                                 PythonParser.this.cast.makeNode(CAstNode.BLOCK_EXPR, nodes));
-
                     }
-                }
-
-                @Override
-                public String getName() {
-                    return functionName;
-                }
-
-                @Override
-                public String[] getArgumentNames() {
-                    return argumentNames;
-                }
-
-                @Override
-                public CAstNode[] getArgumentDefaults() {
-                    return defaultVars;
-                }
-
-                @Override
-                public int getArgumentCount() {
-                    return argumentNames.length;
-
-                }
-
-                @Override
-                public Collection<CAstQualifier> getQualifiers() {
-                    return Collections.emptySet();
                 }
 
                 @Override
@@ -1141,7 +1105,7 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
             }
             ;
 
-            PythonCodeEntity fun = new PythonCodeEntity(functionType);
+            Python3CodeEntity fun = new Python3CodeEntity(functionType);
 
             FunctionContext child = new FunctionContext(context, fun, function);
             CAstVisitor cv = new CAstVisitor(scriptName(), child, parser);
