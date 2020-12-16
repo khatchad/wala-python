@@ -8,6 +8,7 @@ class A:
 
     @classmethod
     def static_func2(cls, func3, arg4):
+        cls.static_func1(func3, arg4)
         return func3(arg4)
 
     def func3(self, arg3):

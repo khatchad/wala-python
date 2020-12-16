@@ -251,7 +251,7 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
 
     public IClass defineMethodType(String name, CAstSourcePositionMap.Position pos, CAstEntity entity, TypeName typeName, WalkContext context) {
         PythonClass self = (PythonClass) types.get(typeName);
-        IClass fun = makeMethodBodyType(name, PythonTypes.trampoline, pos, entity, context, self);
+        IClass fun = makeMethodBodyType(name, PythonTypes.CodeBody, pos, entity, context, self);
 
         assert types.containsKey(typeName);
 
