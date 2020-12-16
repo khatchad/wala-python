@@ -17,12 +17,8 @@ import com.ibm.wala.cast.python.module.PyLibURLModule;
 import com.ibm.wala.cast.python.module.PyScriptModule;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.python.util.PathUtil;
-import com.ibm.wala.cast.tree.CAst;
-import com.ibm.wala.cast.tree.CAstEntity;
-import com.ibm.wala.cast.tree.CAstNode;
-import com.ibm.wala.cast.tree.CAstSourcePositionMap;
+import com.ibm.wala.cast.tree.*;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
-import com.ibm.wala.cast.tree.CAstType;
 import com.ibm.wala.cast.tree.impl.CAstImpl;
 import com.ibm.wala.cast.tree.impl.CAstTypeDictionaryImpl;
 import com.ibm.wala.cast.types.AstMethodReference;
@@ -50,17 +46,35 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
 
     public class DynamicMethodBody extends DynamicCodeBody {
         private final IClass container;
+        private final Collection<Annotation> annotations;
 
         public DynamicMethodBody(TypeReference codeName, TypeReference parent, IClassLoader loader,
                                  Position sourcePosition, CAstEntity entity, WalkContext context, IClass container) {
             super(codeName, parent, loader, sourcePosition, entity, context);
             this.container = container;
+            this.annotations = new HashSet<>();
+            for (CAstAnnotation astAnnotation : entity.getAnnotations()) {
+                if (astAnnotation.getType().equals(PythonTypes.cAstDynamicAnnotation)) {
+                    CAstNode node = (CAstNode) astAnnotation.getArguments().get("dynamicAnnotation");
+                    // FIXME 现在只处理无参的annotation
+                    if (node.getChild(0).getValue() instanceof String) {
+                        String annotation = (String) node.getChild(0).getValue();
+                        TypeReference typeReference = TypeReference.findOrCreate(PythonTypes.pythonLoader,
+                                TypeName.findOrCreate("L" + annotation));
+                        annotations.add(Annotation.make(typeReference));
+                    }
+                }
+            }
         }
 
         public IClass getContainer() {
             return container;
         }
 
+        @Override
+        public Collection<Annotation> getAnnotations() {
+            return annotations;
+        }
     }
 
     public class PythonClass extends CoreClass {
@@ -110,9 +124,9 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
     @Override
     public void init(final List<Module> modules) {
 
-        Path rootPath=null;
+        Path rootPath = null;
         for (Module module : modules) {
-            if (module instanceof PyScriptModule){
+            if (module instanceof PyScriptModule) {
                 Class<?> thisModuleClass = module.getClass();
                 if (moduleClass == null) {
                     moduleClass = thisModuleClass;
@@ -237,8 +251,7 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
 
     public IClass defineMethodType(String name, CAstSourcePositionMap.Position pos, CAstEntity entity, TypeName typeName, WalkContext context) {
         PythonClass self = (PythonClass) types.get(typeName);
-
-        IClass fun = makeMethodBodyType(name, PythonTypes.CodeBody, pos, entity, context, self);
+        IClass fun = makeMethodBodyType(name, PythonTypes.trampoline, pos, entity, context, self);
 
         assert types.containsKey(typeName);
 

@@ -2,7 +2,7 @@ package com.ibm.wala.cast.python.parser;
 
 import com.ibm.wala.cast.ir.translator.AbstractCodeEntity;
 import com.ibm.wala.cast.python.loader.DynamicAnnotatableEntity;
-import com.ibm.wala.cast.python.types.PythonCAstTypes;
+import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.tree.*;
 
 import java.util.*;
@@ -13,6 +13,7 @@ public abstract class PythonCodeEntity extends AbstractCodeEntity implements Dyn
     private final String functionName;
     private final String[] argumentNames;
     private final CAstNode[] defaultVars;
+    private final HashSet<CAstAnnotation> annotationSet;
 
     protected PythonCodeEntity(CAstType type, Iterable<CAstNode> dynamicAnnotations, String functionName, String[] argumentNames, CAstNode[] defaultVars) {
         super(type);
@@ -20,21 +21,12 @@ public abstract class PythonCodeEntity extends AbstractCodeEntity implements Dyn
         this.functionName = functionName;
         this.argumentNames = argumentNames;
         this.defaultVars = defaultVars;
-    }
-
-    @Override
-    public Iterable<CAstNode> dynamicAnnotations() {
-        return dynamicAnnotations;
-    }
-
-    @Override
-    public Collection<CAstAnnotation> getAnnotations() {
-        Set<CAstAnnotation> annotationSet = new HashSet<>();
+        this.annotationSet = new HashSet<>();
         for (CAstNode node : dynamicAnnotations) {
             CAstAnnotation cAstAnnotation = new CAstAnnotation() {
                 @Override
                 public CAstType getType() {
-                    return PythonCAstTypes.dynamicAnnotation;
+                    return PythonTypes.cAstDynamicAnnotation;
                 }
 
                 @Override
@@ -46,6 +38,15 @@ public abstract class PythonCodeEntity extends AbstractCodeEntity implements Dyn
             };
             annotationSet.add(cAstAnnotation);
         }
+    }
+
+    @Override
+    public Iterable<CAstNode> dynamicAnnotations() {
+        return dynamicAnnotations;
+    }
+
+    @Override
+    public Collection<CAstAnnotation> getAnnotations() {
         return annotationSet;
     }
 

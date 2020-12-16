@@ -162,11 +162,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         String fnName = composeEntityName(context, N);
         // FIXME 修复classmethod
         if (N.getType() instanceof CAstType.Method) {
-            if (N instanceof PythonCodeEntity){
-                ((PythonLoader) loader).defineMethodType("L" + fnName, N.getPosition(), N, walaTypeNames.get(((CAstType.Method) N.getType()).getDeclaringType()), context);
-            } else {
-                ((PythonLoader) loader).defineMethodType("L" + fnName, N.getPosition(), N, walaTypeNames.get(((CAstType.Method) N.getType()).getDeclaringType()), context);
-            }
+            ((PythonLoader) loader).defineMethodType("L" + fnName, N.getPosition(), N, walaTypeNames.get(((CAstType.Method) N.getType()).getDeclaringType()), context);
         } else {
             ((PythonLoader) loader).defineFunctionType("L" + fnName, N.getPosition(), N, context);
         }
