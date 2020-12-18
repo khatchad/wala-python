@@ -65,12 +65,34 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                         PythonSummary x = new PythonSummary(tr, call.getNumberOfTotalParameters());
                         int iindex = 0;
                         int v = call.getNumberOfTotalParameters();
-
-                        String name="A";
-                        String entityName=((PythonLoader.DynamicMethodBody) receiver).getContainer().getName().toString();
-                        AstLexicalAccess.Access A = new AstLexicalAccess.Access(name, entityName, PythonTypes.Dynamic, ++v);
-                        x.addStatement(new AstLexicalRead(iindex++, A));
-//                        x.addStatement(PythonLanguage.Python.instructionFactory().GetInstruction(iindex++, ++v, 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom("$function"), PythonTypes.Root)));
+                        String nameAtEntityName = ((PythonLoader.DynamicMethodBody) receiver).getContainer().getName().toString();
+                        int scriptIdx = nameAtEntityName.lastIndexOf(".py/");
+                        String entityName = nameAtEntityName.substring(0, scriptIdx + 3);
+                        String name = nameAtEntityName.substring(scriptIdx + 4);
+                        int innerNum = 0;
+                        // 如果是内部类调用则要用getInstruction
+                        while (name.contains("/")) {
+                            int idxOfSlash = name.indexOf('/');
+                            String fieldName = name.substring(0, idxOfSlash);
+                            if (innerNum == 0) {
+                                AstLexicalAccess.Access A = new AstLexicalAccess.Access(fieldName, entityName, PythonTypes.Dynamic, ++v);
+                                x.addStatement(new AstLexicalRead(iindex++, A));
+                            } else {
+                                x.addStatement(PythonLanguage.Python.instructionFactory()
+                                        .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(fieldName), PythonTypes.Root)));
+                            }
+                            name = name.substring(idxOfSlash + 1);
+                            innerNum++;
+                        }
+                        if (innerNum > 0) {
+                            // A.B.C.static_func()
+                            x.addStatement(PythonLanguage.Python.instructionFactory()
+                                    .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(name), PythonTypes.Root)));
+                        } else {
+                            // A.static_func()
+                            AstLexicalAccess.Access A = new AstLexicalAccess.Access(name, entityName, PythonTypes.Dynamic, ++v);
+                            x.addStatement(new AstLexicalRead(iindex++, A));
+                        }
                         int i = 0;
                         int[] params = new int[Math.max(2, call.getNumberOfPositionalParameters() + 1)];
                         params[i++] = 1;
