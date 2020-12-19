@@ -16,26 +16,8 @@ class A:
             def func5(cls):
                 return "func5"
 
-
-    def __init__(self, func):
-        self.func = func
-
-    @staticmethod
-    def static_func1(func2, arg3):
-        return func2(arg3)
-
-    @classmethod
-    def class_func2(cls, func3, arg4):
-        # cls.static_func1(func3, arg4)
-        return func3(arg4)
-
-    def func3(self, arg3):
-        return self.func(arg3)
-
-
-def func(arg):
-    print("func", arg)
-
+    def __init__(self):
+        pass
 
 
 # A.static_func1(func, "a") # yes

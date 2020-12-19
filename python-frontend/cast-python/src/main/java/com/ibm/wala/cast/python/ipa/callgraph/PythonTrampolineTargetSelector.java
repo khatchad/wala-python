@@ -38,6 +38,9 @@ import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.collections.Pair;
 import com.ibm.wala.util.strings.Atom;
 
+/**
+ * 这里在每个函数前都套了层wrapper， 但是这样做会降低指针分析效果
+ */
 public class PythonTrampolineTargetSelector implements MethodTargetSelector {
     private final MethodTargetSelector base;
 
@@ -53,81 +56,158 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
         if (receiver != null) {
             IClassHierarchy cha = receiver.getClassHierarchy();
 
-            if (receiver.getAnnotations().contains(Annotation.make(PythonTypes.classMethod))) {
-                if (!caller.getMethod().getName().toString().startsWith("trampoline")) {
-                    PythonInvokeInstruction call = (PythonInvokeInstruction) caller.getIR().getCalls(site)[0];
-                    Pair<IClass, Integer> key = Pair.make(receiver, call.getNumberOfTotalParameters());
-                    if (!codeBodies.containsKey(key)) {
-                        Map<Integer, Atom> names = HashMapFactory.make();
-                        MethodReference tr = MethodReference.findOrCreate(receiver.getReference(),
-                                Atom.findOrCreateUnicodeAtom("trampoline" + call.getNumberOfTotalParameters()),
-                                AstMethodReference.fnDesc);
-                        PythonSummary x = new PythonSummary(tr, call.getNumberOfTotalParameters());
-                        int iindex = 0;
-                        int v = call.getNumberOfTotalParameters();
-                        String nameAtEntityName = ((PythonLoader.DynamicMethodBody) receiver).getContainer().getName().toString();
-                        int scriptIdx = nameAtEntityName.lastIndexOf(".py/");
-                        String entityName = nameAtEntityName.substring(0, scriptIdx + 3);
-                        String name = nameAtEntityName.substring(scriptIdx + 4);
-                        int innerNum = 0;
-                        // 如果是内部类调用则要用getInstruction
-                        while (name.contains("/")) {
-                            int idxOfSlash = name.indexOf('/');
-                            String fieldName = name.substring(0, idxOfSlash);
-                            if (innerNum == 0) {
-                                AstLexicalAccess.Access A = new AstLexicalAccess.Access(fieldName, entityName, PythonTypes.Dynamic, ++v);
-                                x.addStatement(new AstLexicalRead(iindex++, A));
-                            } else {
-                                x.addStatement(PythonLanguage.Python.instructionFactory()
-                                        .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(fieldName), PythonTypes.Root)));
-                            }
-                            name = name.substring(idxOfSlash + 1);
-                            innerNum++;
-                        }
-                        if (innerNum > 0) {
-                            // A.B.C.static_func()
-                            x.addStatement(PythonLanguage.Python.instructionFactory()
-                                    .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(name), PythonTypes.Root)));
-                        } else {
-                            // A.static_func()
-                            AstLexicalAccess.Access A = new AstLexicalAccess.Access(name, entityName, PythonTypes.Dynamic, ++v);
-                            x.addStatement(new AstLexicalRead(iindex++, A));
-                        }
-                        int i = 0;
-                        int[] params = new int[Math.max(2, call.getNumberOfPositionalParameters() + 1)];
-                        params[i++] = 1;
-                        params[i++] = v;
-                        for (int j = 1; j < call.getNumberOfPositionalParameters(); j++) {
-                            params[i++] = j + 1;
-                        }
+            PythonInvokeInstruction call = (PythonInvokeInstruction) caller.getIR().getCalls(site)[0];
+            int realParaNum = call.getNumberOfTotalParameters();
+            if (receiver.getAnnotations().contains(Annotation.make(PythonTypes.classMethod))
+                    && !caller.getMethod().getName().toString().startsWith("cls_trampoline")
+            ) {
+                int defParaNum = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters();
+                Atom defFuncName = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getReference().getDeclaringClass().getName().getClassName();
+                Atom trampolineName = Atom.findOrCreateUnicodeAtom("cls_trampoline_" + defFuncName + "(" + call.getNumberOfTotalParameters() + ")");
 
-                        int ki = 0, ji = call.getNumberOfPositionalParameters() + 1;
-                        Pair<String, Integer>[] keys = new Pair[0];
-                        if (call.getKeywords() != null) {
-                            keys = new Pair[call.getKeywords().size()];
-                            for (String k : call.getKeywords()) {
-                                names.put(ji, Atom.findOrCreateUnicodeAtom(k));
-                                keys[ki++] = Pair.make(k, ji++);
-                            }
-                        }
-
-                        int result = ++v;
-                        int except = ++v;
-                        CallSiteReference ref = new DynamicCallSiteReference(call.getCallSite().getDeclaredTarget(), 2);
-                        x.addStatement(new PythonInvokeInstruction(iindex++, result, except, ref, params, keys));
-                        x.addStatement(new SSAReturnInstruction(iindex, result, false));
-                        x.setValueNames(names);
-                        codeBodies.put(key, new PythonSummarizedFunction(tr, x, receiver));
-                    }
-                    return codeBodies.get(key);
-                }
-            } else if (cha.isSubclassOf(receiver, cha.lookupClass(PythonTypes.trampoline))) {
-                PythonInvokeInstruction call = (PythonInvokeInstruction) caller.getIR().getCalls(site)[0];
-                Pair<IClass, Integer> key = Pair.make(receiver, call.getNumberOfTotalParameters());
+                Pair<IClass, Integer> key = Pair.make(receiver, realParaNum);
                 if (!codeBodies.containsKey(key)) {
                     Map<Integer, Atom> names = HashMapFactory.make();
                     MethodReference tr = MethodReference.findOrCreate(receiver.getReference(),
-                            Atom.findOrCreateUnicodeAtom("trampoline" + call.getNumberOfTotalParameters()),
+                            trampolineName,
+                            AstMethodReference.fnDesc);
+                    PythonSummary x = new PythonSummary(tr, call.getNumberOfTotalParameters());
+                    int iindex = 0;
+                    int v = call.getNumberOfTotalParameters();
+                    String nameAtEntityName = ((PythonLoader.DynamicMethodBody) receiver).getContainer().getName().toString();
+                    int scriptIdx = nameAtEntityName.lastIndexOf(".py/");
+                    String entityName = nameAtEntityName.substring(0, scriptIdx + 3);
+                    String name = nameAtEntityName.substring(scriptIdx + 4);
+                    int innerNum = 0;
+                    // 如果是内部类调用则要用getInstruction
+                    while (name.contains("/")) {
+                        int idxOfSlash = name.indexOf('/');
+                        String fieldName = name.substring(0, idxOfSlash);
+                        if (innerNum == 0) {
+                            AstLexicalAccess.Access A = new AstLexicalAccess.Access(fieldName, entityName, PythonTypes.Dynamic, ++v);
+                            x.addStatement(new AstLexicalRead(iindex++, A));
+                        } else {
+                            x.addStatement(PythonLanguage.Python.instructionFactory()
+                                    .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(fieldName), PythonTypes.Root)));
+                        }
+                        name = name.substring(idxOfSlash + 1);
+                        innerNum++;
+                    }
+                    if (innerNum > 0) {
+                        // A.B.C.static_func()
+                        x.addStatement(PythonLanguage.Python.instructionFactory()
+                                .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(name), PythonTypes.Root)));
+                    } else {
+                        // A.static_func()
+                        AstLexicalAccess.Access A = new AstLexicalAccess.Access(name, entityName, PythonTypes.Dynamic, ++v);
+                        x.addStatement(new AstLexicalRead(iindex++, A));
+                    }
+                    int i = 0;
+                    int[] params;
+                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")){
+                        params = new int[Math.max(2, call.getNumberOfPositionalParameters())];
+                    } else {
+                        params = new int[Math.max(2, call.getNumberOfPositionalParameters() + 1)];
+                    }
+                    params[i++] = 1;
+                    params[i++] = v;
+
+                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")){
+                        for (int j=2; j < call.getNumberOfPositionalParameters(); j++) {
+                            params[i++] = j + 1;
+                        }
+                    } else {
+                        for (int j=1; j < call.getNumberOfPositionalParameters(); j++) {
+                            params[i++] = j + 1;
+                        }
+                    }
+
+                    int ki = 0, ji = call.getNumberOfPositionalParameters() + 1;
+                    Pair<String, Integer>[] keys = new Pair[0];
+                    if (call.getKeywords() != null) {
+                        keys = new Pair[call.getKeywords().size()];
+                        for (String k : call.getKeywords()) {
+                            names.put(ji, Atom.findOrCreateUnicodeAtom(k));
+                            keys[ki++] = Pair.make(k, ji++);
+                        }
+                    }
+
+                    int result = ++v;
+                    int except = ++v;
+                    CallSiteReference ref = new DynamicCallSiteReference(call.getCallSite().getDeclaredTarget(), 2);
+                    x.addStatement(new PythonInvokeInstruction(iindex++, result, except, ref, params, keys));
+                    x.addStatement(new SSAReturnInstruction(iindex, result, false));
+                    x.setValueNames(names);
+                    codeBodies.put(key, new PythonSummarizedFunction(tr, x, receiver));
+                }
+                return codeBodies.get(key);
+            } else if (receiver.getAnnotations().contains(Annotation.make(PythonTypes.staticMethod))
+                    && !caller.getMethod().getName().toString().startsWith("static_trampoline")
+            ) {
+                int defParaNum = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters();
+                Atom defFuncName = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getReference().getDeclaringClass().getName().getClassName();
+                Atom trampolineName = Atom.findOrCreateUnicodeAtom("static_trampoline_" + defFuncName + "(" + call.getNumberOfTotalParameters() + ")");
+
+                Pair<IClass, Integer> key = Pair.make(receiver, realParaNum);
+                if (!codeBodies.containsKey(key)) {
+                    Map<Integer, Atom> names = HashMapFactory.make();
+                    MethodReference tr = MethodReference.findOrCreate(receiver.getReference(),
+                            trampolineName,
+                            AstMethodReference.fnDesc);
+                    PythonSummary x = new PythonSummary(tr, call.getNumberOfTotalParameters());
+                    int iindex = 0;
+                    int v = call.getNumberOfTotalParameters();
+                    // 如果是内部类调用则要用getInstruction
+                    int i = 0;
+
+                    int[] params;
+                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")){
+                        params = new int[Math.max(2, call.getNumberOfPositionalParameters()-1)];
+                    } else {
+                        params = new int[Math.max(2, call.getNumberOfPositionalParameters())];
+                    }
+                    params[i++] = 1;
+
+                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")){
+                        for (int j=2; j < call.getNumberOfPositionalParameters(); j++) {
+                            params[i++] = j + 1;
+                        }
+                    } else {
+                        for (int j=1; j < call.getNumberOfPositionalParameters(); j++) {
+                            params[i++] = j + 1;
+                        }
+                    }
+                    int ki = 0, ji = call.getNumberOfPositionalParameters() + 1;
+                    Pair<String, Integer>[] keys = new Pair[0];
+                    if (call.getKeywords() != null) {
+                        keys = new Pair[call.getKeywords().size()];
+                        for (String k : call.getKeywords()) {
+                            names.put(ji, Atom.findOrCreateUnicodeAtom(k));
+                            keys[ki++] = Pair.make(k, ji++);
+                        }
+                    }
+
+                    int result = ++v;
+                    int except = ++v;
+                    CallSiteReference ref = new DynamicCallSiteReference(call.getCallSite().getDeclaredTarget(), 2);
+                    x.addStatement(new PythonInvokeInstruction(iindex++, result, except, ref, params, keys));
+                    x.addStatement(new SSAReturnInstruction(iindex, result, false));
+                    x.setValueNames(names);
+                    codeBodies.put(key, new PythonSummarizedFunction(tr, x, receiver));
+                }
+                return codeBodies.get(key);
+            } else if (cha.isSubclassOf(receiver, cha.lookupClass(PythonTypes.trampoline))) {
+                // self
+                Pair<IClass, Integer> key = Pair.make(receiver, call.getNumberOfTotalParameters());
+                if (!codeBodies.containsKey(key)) {
+
+//                    int defParaNum = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters();
+                    Atom defFuncName = receiver.getName().getClassName();
+                    Atom trampolineName = Atom.findOrCreateUnicodeAtom("self_trampoline_" + defFuncName + "(" + call.getNumberOfTotalParameters() + ")");
+
+                    Map<Integer, Atom> names = HashMapFactory.make();
+                    MethodReference tr = MethodReference.findOrCreate(receiver.getReference(),
+                            trampolineName,
                             AstMethodReference.fnDesc);
                     PythonSummary x = new PythonSummary(tr, call.getNumberOfTotalParameters());
                     IClass filter = ((PythonInstanceMethodTrampoline) receiver).getRealClass();

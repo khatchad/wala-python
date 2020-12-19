@@ -1,28 +1,19 @@
 class A:
-    def __init__(self, func):
-        self.func = func
-
-    @staticmethod
-    def static_func1(func1, arg2):
-        return func1(arg2)
 
     @classmethod
-    def static_func2(cls, func1, arg2):
-        return func1(arg2)
-
-    def func3(self, arg):
-        return self.func(arg)
+    def class_func(cls, func3, arg4):
+        return func3(arg4)
 
 
 def func(arg):
     print("func", arg)
 
 
-
-A.static_func1(func, "a")
-A.static_func2(func, "a")
+A.class_func(func, "a")  # yes
+# A.class_func2(func, "a") # no func3 in ssa is v3 but func is v2
+# A.B.C.func4()
 #
 # a = A(func)
-# a.static_func1(func, "a")
-# a.static_func2(func, "a")
-# a.func3("a")
+# a.static_func1(func, "a") # no
+# a.class_func2(func, "a") # yes
+# a.func3("a") # yes
