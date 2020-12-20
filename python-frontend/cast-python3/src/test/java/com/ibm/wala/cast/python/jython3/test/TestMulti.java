@@ -6,25 +6,75 @@ import com.ibm.wala.examples.drivers.PDFTypeHierarchy;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.propagation.PropagationCallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.propagation.SSAContextInterpreter;
-import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.NullProgressMonitor;
 import com.ibm.wala.util.WalaException;
 import com.ibm.wala.viz.DotUtil;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
 
 public class TestMulti extends TestPythonCallGraphShape {
 
-    protected static final Object[][] assertionsCalls1 = new Object[][]{
-            new Object[]{ROOT, new String[]{"script calls1.py", "script calls2.py"}}
-    };
 
     @Test
-    public void testCalls1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-        CallGraph CG = process("calls1.py", "calls2.py");
-        verifyGraphAssertions(CG, assertionsCalls1);
+    public void testCalls1() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls1.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(CG,  "calls1", "foo"));
+        Assert.assertTrue(TestUtil.hasEdge(CG,  "foo", "id"));
+        Assert.assertTrue(TestUtil.hasEdge(CG,  "self_trampoline_foo", "foo"));
+    }
+
+
+    @Test
+    public void testCalls2() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls2.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(CG,  "foo", "id"));
+    }
+
+    @Test
+    public void testCalls3() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls3.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(CG,  "foo", "call1"));
+    }
+
+    @Test
+    public void testCalls4() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls4.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(CG,  "foo", "call1"));
+    }
+
+    @Test
+    public void testCalls5() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls5.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(CG, "call1", "id"));
+    }
+
+    @Test
+    public void testCalls6() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls6.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(CG, "foo", "id"));
+    }
+
+    @Test
+    public void testCalls7() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls7.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(CG,  "calls7", "nothing"));
     }
 
     protected static final Object[][] assertionsMulti1 = new Object[][]{

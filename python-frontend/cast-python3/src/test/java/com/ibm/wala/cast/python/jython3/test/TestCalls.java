@@ -14,31 +14,6 @@ import java.util.Collections;
 
 public class TestCalls extends TestPythonCallGraphShape {
 
-	 protected static final Object[][] assertionsCalls1 = new Object[][] {
-		    new Object[] { ROOT, new String[] { "script calls1.py" } },
-		    new Object[] {
-		        "script calls1.py",
-		        new String[] { "script calls1.py/Foo", "script calls1.py/foo", "$script calls1.py/Foo/foo:trampoline3", "script calls1.py/id", "script calls1.py/nothing" } },
-		    new Object[] {
-		    	"$script calls1.py/Foo/foo:trampoline3",
-		    	new String[] { "script calls1.py/Foo/foo" } },
-		    new Object[] {
-			    "script calls1.py/call",
-			    new String[] { "script calls1.py/id" } },
-		    new Object[] {
-		    	"script calls1.py/Foo/foo",
-		    	new String[] { "script calls1.py/id" } },
-		    new Object[] {
-		    	"script calls1.py/foo",
-			    new String[] { "script calls1.py/call" } }
-	 };
-	 
-	@Test
-	public void testCalls1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		CallGraph CG = process("calls1.py");
-		verifyGraphAssertions(CG, assertionsCalls1);
-	}
-
 	 protected static final Object[][] assertionsCalls2 = new Object[][] {
 		    new Object[] { ROOT, new String[] { "script calls2.py" } },
 		    new Object[] {
