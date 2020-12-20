@@ -10,10 +10,15 @@
  *****************************************************************************/
 package com.ibm.wala.cast.python.ipa.callgraph;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import com.ibm.wala.cast.ipa.callgraph.AstSSAPropagationCallGraphBuilder;
+import com.ibm.wala.cast.ir.ssa.AstIRFactory;
 import com.ibm.wala.cast.ir.ssa.AstLexicalAccess;
 import com.ibm.wala.cast.ir.ssa.AstLexicalRead;
+import com.ibm.wala.cast.loader.AstMethod;
 import com.ibm.wala.cast.loader.DynamicCallSiteReference;
 import com.ibm.wala.cast.python.ipa.summaries.PythonInstanceMethodTrampoline;
 import com.ibm.wala.cast.python.ipa.summaries.PythonSummarizedFunction;
@@ -78,30 +83,46 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                     int scriptIdx = nameAtEntityName.lastIndexOf(".py/");
                     String entityName = nameAtEntityName.substring(0, scriptIdx + 3);
                     String name = nameAtEntityName.substring(scriptIdx + 4);
-                    int innerNum = 0;
-                    // 如果是内部类调用则要用getInstruction
-                    while (name.contains("/")) {
-                        int idxOfSlash = name.indexOf('/');
-                        String fieldName = name.substring(0, idxOfSlash);
-                        if (innerNum == 0) {
-                            AstLexicalAccess.Access A = new AstLexicalAccess.Access(fieldName, entityName, PythonTypes.Dynamic, ++v);
+
+                    Set<String> globalNames=new HashSet<>();
+                    if (!caller.getMethod().getName().toString().startsWith("self_trampoline")){
+                        AstMethod.LexicalInformation LI = ((AstIRFactory.AstIR) caller.getIR()).lexicalInfo();
+                        Pair<String, String>[] exposedNames = LI.getExposedNames();
+                        for (int i = 0; i < exposedNames.length; i++) {
+                            globalNames.add(exposedNames[i].fst);
+                        }
+                    }
+                    if (name.contains("/")){
+                        AstLexicalAccess.Access global;
+                        String[] possibleGlobals=name.split("/");
+                        int i=0;
+                        for (;i<possibleGlobals.length;i++ ){
+                            if (globalNames.contains(possibleGlobals[i])){
+                                AstLexicalAccess.Access A = new AstLexicalAccess.Access(possibleGlobals[i], entityName, PythonTypes.Dynamic, ++v);
+                                AstLexicalRead astLexicalRead=new AstLexicalRead(iindex++, A);
+                                x.addStatement(astLexicalRead);
+                                break;
+                            }
+                        }
+                        if (i==possibleGlobals.length){
+                            System.err.println("Not found a global called "+name+"@"+entityName);
+                        }
+                        i++;
+                        for (;i<possibleGlobals.length;i++){
+                            x.addStatement(PythonLanguage.Python.instructionFactory()
+                                    .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(possibleGlobals[i]), PythonTypes.Root)));
+                        }
+                    } else {
+                        // A.static_func() || a.static_func()
+                        if (caller.getMethod().getName().toString().startsWith("self_trampoline") || globalNames.contains(name)){
+                            AstLexicalAccess.Access A = new AstLexicalAccess.Access(name, entityName, PythonTypes.Dynamic, ++v);
                             x.addStatement(new AstLexicalRead(iindex++, A));
                         } else {
-                            x.addStatement(PythonLanguage.Python.instructionFactory()
-                                    .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(fieldName), PythonTypes.Root)));
+                            System.err.println("Not found a global called "+name+"@"+entityName);
                         }
-                        name = name.substring(idxOfSlash + 1);
-                        innerNum++;
                     }
-                    if (innerNum > 0) {
-                        // A.B.C.static_func()
-                        x.addStatement(PythonLanguage.Python.instructionFactory()
-                                .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(name), PythonTypes.Root)));
-                    } else {
-                        // A.static_func()
-                        AstLexicalAccess.Access A = new AstLexicalAccess.Access(name, entityName, PythonTypes.Dynamic, ++v);
-                        x.addStatement(new AstLexicalRead(iindex++, A));
-                    }
+
+
                     int i = 0;
                     int[] params;
                     if (caller.getMethod().getName().toString().startsWith("self_trampoline")){

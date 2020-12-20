@@ -109,17 +109,4 @@ public abstract class TestPythonCallGraphShape extends TestCallGraphShape {
 		return sb;
 	}
 
-	public static void main(String[] args) throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		TestPythonCallGraphShape driver = new TestPythonCallGraphShape() {
-			
-		};
-		
-		PythonAnalysisEngine<?> E = driver.makeEngine(args[0]);
-		
-		CallGraphBuilder<? super InstanceKey> builder = E.defaultCallGraphBuilder();
-		CallGraph CG = builder.makeCallGraph(E.getOptions(), new NullProgressMonitor());
-		
-		CAstCallGraphUtil.AVOID_DUMP = false;
-		CAstCallGraphUtil.dumpCG(((SSAPropagationCallGraphBuilder)builder).getCFAContextInterpreter(), builder.getPointerAnalysis(), CG);
-	}
 }

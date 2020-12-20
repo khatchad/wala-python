@@ -38,18 +38,52 @@ public class TestStaicAndClassMethod extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("static/class_method3.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        TestUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), cg);
         Assert.assertTrue(TestUtil.hasEdge(cg, "func4", "cls_trampoline_func5"));
         Assert.assertTrue(TestUtil.hasEdge(cg,  "cls_trampoline_func5", "func5"));
     }
+
+
+    @Test
+    public void testClass4() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("static/class_method4.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(cg, "func4", "cls_trampoline_func5"));
+        Assert.assertTrue(TestUtil.hasEdge(cg,  "cls_trampoline_func5", "func5"));
+    }
+
+
+    @Test
+    public void testClass5() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("static/class_method5.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(cg, "func4", "cls_trampoline_func5"));
+        Assert.assertTrue(TestUtil.hasEdge(cg,  "cls_trampoline_func5", "func5"));
+    }
+
+    @Test
+    public void testClass6() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("static/class_method6.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(cg, "class_func2", "func"));
+    }
+
     @Test
     public void testStatic1() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine("static/static_method.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
-        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        CAstCallGraphUtil.AVOID_DUMP = false;
-        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
-        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(cg, "static_func1", "func"));
+    }
+
+    @Test
+    public void testStatic2() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("static/static_method2.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(cg, "static_func1", "func"));
     }
 
 }
