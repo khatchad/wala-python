@@ -1,3 +1,4 @@
+# 所有做完的效果
 def func1(func1, func2, arg1, func3):
     func2(arg1)
     func3(arg1)
