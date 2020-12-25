@@ -1882,7 +1882,9 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
         @Override
         public CAstNode visitStarred(Starred arg0) throws Exception {
             // FIXME
-            return arg0.getInternalValue().accept(this);
+            CAstNode token = arg0.getInternalValue().accept(this);
+            CAstNode ret;
+            return cast.makeNode(CAstNode.PRIMITIVE, token);
         }
 
         @Override

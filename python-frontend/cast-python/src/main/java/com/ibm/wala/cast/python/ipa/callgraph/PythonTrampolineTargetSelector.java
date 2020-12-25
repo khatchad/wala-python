@@ -84,48 +84,48 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                     String entityName = nameAtEntityName.substring(0, scriptIdx + 3);
                     String name = nameAtEntityName.substring(scriptIdx + 4);
 
-                    Set<String> globalNames=new HashSet<>();
-                    if (!caller.getMethod().getName().toString().startsWith("self_trampoline")){
+                    Set<String> globalNames = new HashSet<>();
+                    if (!caller.getMethod().getName().toString().startsWith("self_trampoline")) {
                         AstMethod.LexicalInformation LI = ((AstIRFactory.AstIR) caller.getIR()).lexicalInfo();
                         Pair<String, String>[] exposedNames = LI.getExposedNames();
                         for (int i = 0; i < exposedNames.length; i++) {
                             globalNames.add(exposedNames[i].fst);
                         }
                     }
-                    if (name.contains("/")){
+                    if (name.contains("/")) {
                         AstLexicalAccess.Access global;
-                        String[] possibleGlobals=name.split("/");
-                        int i=0;
-                        for (;i<possibleGlobals.length;i++ ){
-                            if (globalNames.contains(possibleGlobals[i])){
+                        String[] possibleGlobals = name.split("/");
+                        int i = 0;
+                        for (; i < possibleGlobals.length; i++) {
+                            if (globalNames.contains(possibleGlobals[i])) {
                                 AstLexicalAccess.Access A = new AstLexicalAccess.Access(possibleGlobals[i], entityName, PythonTypes.Dynamic, ++v);
-                                AstLexicalRead astLexicalRead=new AstLexicalRead(iindex++, A);
+                                AstLexicalRead astLexicalRead = new AstLexicalRead(iindex++, A);
                                 x.addStatement(astLexicalRead);
                                 break;
                             }
                         }
-                        if (i==possibleGlobals.length){
-                            System.err.println("Not found a global called "+name+"@"+entityName);
+                        if (i == possibleGlobals.length) {
+                            System.err.println("Not found a global called " + name + "@" + entityName);
                         }
                         i++;
-                        for (;i<possibleGlobals.length;i++){
+                        for (; i < possibleGlobals.length; i++) {
                             x.addStatement(PythonLanguage.Python.instructionFactory()
                                     .GetInstruction(iindex++, ++v, v - 1, FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(possibleGlobals[i]), PythonTypes.Root)));
                         }
                     } else {
                         // A.static_func() || a.static_func()
-                        if (caller.getMethod().getName().toString().startsWith("self_trampoline") || globalNames.contains(name)){
+                        if (caller.getMethod().getName().toString().startsWith("self_trampoline") || globalNames.contains(name)) {
                             AstLexicalAccess.Access A = new AstLexicalAccess.Access(name, entityName, PythonTypes.Dynamic, ++v);
                             x.addStatement(new AstLexicalRead(iindex++, A));
                         } else {
-                            System.err.println("Not found a global called "+name+"@"+entityName);
+                            System.err.println("Not found a global called " + name + "@" + entityName);
                         }
                     }
 
 
                     int i = 0;
                     int[] params;
-                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")){
+                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")) {
                         params = new int[Math.max(2, call.getNumberOfPositionalParameters())];
                     } else {
                         params = new int[Math.max(2, call.getNumberOfPositionalParameters() + 1)];
@@ -133,12 +133,12 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                     params[i++] = 1;
                     params[i++] = v;
 
-                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")){
-                        for (int j=2; j < call.getNumberOfPositionalParameters(); j++) {
+                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")) {
+                        for (int j = 2; j < call.getNumberOfPositionalParameters(); j++) {
                             params[i++] = j + 1;
                         }
                     } else {
-                        for (int j=1; j < call.getNumberOfPositionalParameters(); j++) {
+                        for (int j = 1; j < call.getNumberOfPositionalParameters(); j++) {
                             params[i++] = j + 1;
                         }
                     }
@@ -182,19 +182,19 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                     int i = 0;
 
                     int[] params;
-                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")){
-                        params = new int[Math.max(2, call.getNumberOfPositionalParameters()-1)];
+                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")) {
+                        params = new int[Math.max(2, call.getNumberOfPositionalParameters() - 1)];
                     } else {
                         params = new int[Math.max(2, call.getNumberOfPositionalParameters())];
                     }
                     params[i++] = 1;
 
-                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")){
-                        for (int j=2; j < call.getNumberOfPositionalParameters(); j++) {
+                    if (caller.getMethod().getName().toString().startsWith("self_trampoline")) {
+                        for (int j = 2; j < call.getNumberOfPositionalParameters(); j++) {
                             params[i++] = j + 1;
                         }
                     } else {
-                        for (int j=1; j < call.getNumberOfPositionalParameters(); j++) {
+                        for (int j = 1; j < call.getNumberOfPositionalParameters(); j++) {
                             params[i++] = j + 1;
                         }
                     }
@@ -217,7 +217,9 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                     codeBodies.put(key, new PythonSummarizedFunction(tr, x, receiver));
                 }
                 return codeBodies.get(key);
-            } else if (cha.isSubclassOf(receiver, cha.lookupClass(PythonTypes.trampoline))) {
+            } else if (
+                    cha.isSubclassOf(receiver, cha.lookupClass(PythonTypes.trampoline))
+            ) {
                 // self
                 Pair<IClass, Integer> key = Pair.make(receiver, call.getNumberOfTotalParameters());
                 if (!codeBodies.containsKey(key)) {
@@ -270,6 +272,16 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                 }
 
                 return codeBodies.get(key);
+            } else if (receiver instanceof PythonLoader.DynamicMethodBody
+                    && ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters() != realParaNum
+            ) {
+                int defParaNum = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters();
+                Atom defFuncName = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getReference().getDeclaringClass().getName().getClassName();
+                Atom trampolineName = Atom.findOrCreateUnicodeAtom("args_trampoline_" + defFuncName + "(" + realParaNum + ")");
+                // 若Call中有*args，取v_a=args
+
+                // 生成v_{n+1}=v_a.ref(0),v_{n+2}=v_a.ref(1), ..., v_{defParaNum}=v_a.ref(paraNum-1)
+
             }
         }
 

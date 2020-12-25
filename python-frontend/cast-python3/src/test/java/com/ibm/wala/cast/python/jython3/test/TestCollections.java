@@ -15,13 +15,6 @@ import java.io.IOException;
 public class TestCollections extends TestPythonCallGraphShape {
 
 	@Test
-	public void testCollections1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		CallGraph CG = process("collections.py");
-		System.err.println(CG);
-		//verifyGraphAssertions(CG, assertionsCalls1);
-	}
-
-	@Test
 	public void testList1() throws WalaException, IllegalArgumentException, CancelException, IOException {
 		PythonAnalysisEngine<?> engine = makeEngine("collections/listTest1.py");
 		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
@@ -35,8 +28,34 @@ public class TestCollections extends TestPythonCallGraphShape {
 		PythonAnalysisEngine<?> engine = makeEngine("collections/listTest2.py");
 		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
 		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-		TestUtil.dumpCG(builder, cg);
+//		TestUtil.dumpCG(builder, cg);
 		Assert.assertTrue(TestUtil.hasEdge(cg,  "listTest", "func3"));
 	}
 
+	@Test
+	public void testDict1() throws WalaException, IllegalArgumentException, CancelException, IOException {
+		PythonAnalysisEngine<?> engine = makeEngine("collections/dictTest1.py");
+		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+//		TestUtil.dumpCG(builder, cg);
+		Assert.assertTrue(TestUtil.hasEdge(cg,  "dictTest1", "func1"));
+	}
+
+	@Test
+	public void testDict2() throws WalaException, IllegalArgumentException, CancelException, IOException {
+		PythonAnalysisEngine<?> engine = makeEngine("collections/dictTest2.py");
+		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+//		TestUtil.dumpCG(builder, cg);
+		Assert.assertTrue(TestUtil.hasEdge(cg,  "dictTest2", "func1"));
+	}
+
+	@Test
+	public void testTuple() throws WalaException, IllegalArgumentException, CancelException, IOException {
+		PythonAnalysisEngine<?> engine = makeEngine("collections/tupleTest1.py");
+		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+//		TestUtil.dumpCG(builder, cg);
+		Assert.assertTrue(TestUtil.hasEdge(cg,  "tupleTest1", "func2"));
+	}
 }

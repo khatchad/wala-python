@@ -496,6 +496,24 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                                         "L" + type))));
     }
 
+    @Override
+    protected void leaveCall(CAstNode n, WalkContext c, CAstVisitor<WalkContext> visitor) {
+        WalkContext context = c;
+        int result = c.getValue(n);
+        int exp = context.currentScope().allocateTempValue();
+        int fun = c.getValue(n.getChild(0));
+        CAstNode functionName = n.getChild(1);
+        int[] args = new int[n.getChildCount() - 2];
+        for (int i = 0; i < args.length; i++) {
+            CAstNode s=n.getChild(i + 2);
+            if (s.getKind()==CAstNode.PRIMITIVE){
+                args[i] = c.getValue(s.getChild(0));
+            }else {
+                args[i] = c.getValue(s);
+            }
+        }
+        doCall(context, n, result, exp, functionName, fun, args);
+    }
     /**
      * @param context
      * @param call
