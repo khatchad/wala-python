@@ -28,24 +28,24 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
     private final int result;
     private final int[] positionalParams;
     private final Pair<String, Integer>[] keywordParams;
-    private final int args;
-    private final int kwargs;
+    private final int argsVal;
+    private final int kwargsVal;
 
-    public int getArgs() {
-        return args;
+    public int getArgsVal() {
+        return argsVal;
     }
 
-    public int getKwargs() {
-        return kwargs;
+    public int getKwargsVal() {
+        return kwargsVal;
     }
 
-    public PythonInvokeInstruction(int iindex, int result, int exception, CallSiteReference site, int[] positionalParams, Pair<String, Integer>[] keywordParams, int args, int kwargs) {
+    public PythonInvokeInstruction(int iindex, int result, int exception, CallSiteReference site, int[] positionalParams, Pair<String, Integer>[] keywordParams, int argsVal, int kwargsVal) {
         super(iindex, exception, site);
         this.positionalParams = positionalParams;
         this.keywordParams = keywordParams;
         this.result = result;
-        this.args = args;
-        this.kwargs = kwargs;
+        this.argsVal = argsVal;
+        this.kwargsVal = kwargsVal;
     }
 
     public PythonInvokeInstruction(int iindex, int result, int exception, CallSiteReference site, int[] positionalParams, Pair<String, Integer>[] keywordParams) {
@@ -67,7 +67,9 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
 
     @Override
     public int getNumberOfUses() {
-        return positionalParams.length + keywordParams.length;
+        int args = argsVal > 0 ? 1 : 0;
+        int kwargs = kwargsVal > 0 ? 1 : 0;
+        return positionalParams.length + keywordParams.length+args+kwargs;
     }
 
     public List<String> getKeywords() {
@@ -92,9 +94,17 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
     public int getUse(int j) throws UnsupportedOperationException {
         if (j < positionalParams.length) {
             return positionalParams[j];
-        } else {
-            assert j < getNumberOfTotalParameters();
+        } else if (j < keywordParams.length+positionalParams.length){
             return keywordParams[j - positionalParams.length].snd;
+        } else if (j==keywordParams.length+positionalParams.length){
+            if (argsVal>0){
+                return argsVal;
+            } else {
+                return kwargsVal;
+            }
+        } else {
+            assert j<getNumberOfUses();
+            return kwargsVal;
         }
     }
 
@@ -117,6 +127,8 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
 
         int[] newpos = positionalParams;
         Pair<String, Integer>[] newkey = keywordParams;
+        int argsVal=0;
+        int kwargsVal=0;
         if (uses != null && uses.length > 0) {
             int j = 0;
             newpos = new int[positionalParams.length];
@@ -127,9 +139,19 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
             for (int i = 0; i < keywordParams.length; i++, j++) {
                 newkey[i] = Pair.make(keywordParams[i].fst, uses[j]);
             }
+            if (j<this.getNumberOfUses()){
+                if (this.argsVal>0){
+                    argsVal=uses[j++];
+                } else {
+                    kwargsVal=uses[j++];
+                }
+            }
+            if (j<this.getNumberOfUses()){
+                kwargsVal=uses[j++];
+            }
         }
 
-        return new PythonInvokeInstruction(iIndex(), nr, ne, site, newpos, newkey);
+        return new PythonInvokeInstruction(iIndex(), nr, ne, site, newpos, newkey, argsVal, kwargsVal);
     }
 
     @Override
@@ -154,6 +176,12 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
             for (Pair<String, Integer> kp : keywordParams) {
                 s = s + " " + kp.fst + ":" + kp.snd;
             }
+        }
+        if (argsVal != -1 && argsVal != 0) {
+            s += " *args=" + argsVal;
+        }
+        if (kwargsVal != -1 && kwargsVal != 0) {
+            s += " **kwargs=" + kwargsVal;
         }
         return super.toString(symbolTable) + s;
     }

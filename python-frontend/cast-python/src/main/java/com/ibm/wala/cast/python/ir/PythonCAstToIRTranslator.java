@@ -360,7 +360,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                     possibleBBs.add(nextBB);
                 }
                 PreBasicBlock nextBB = context.cfg().newBlock(true);
-                for (PreBasicBlock possibleBB: possibleBBs) {
+                for (PreBasicBlock possibleBB : possibleBBs) {
                     context.cfg().addEdge(prevBB, possibleBB);
                     context.cfg().addEdge(possibleBB, nextBB);
                 }
@@ -505,15 +505,17 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         CAstNode functionName = n.getChild(1);
         int[] args = new int[n.getChildCount() - 2];
         for (int i = 0; i < args.length; i++) {
-            CAstNode s=n.getChild(i + 2);
-            if (s.getKind()==CAstNode.PRIMITIVE){
-                args[i] = c.getValue(s.getChild(0));
-            }else {
-                args[i] = c.getValue(s);
-            }
+            CAstNode s = n.getChild(i + 2);
+            args[i] = c.getValue(s);
+//            if (s.getKind()==CAstNode.PRIMITIVE){
+//                args[i] = c.getValue(s.getChild(0));
+//            }else {
+//                args[i] = c.getValue(s);
+//            }
         }
         doCall(context, n, result, exp, functionName, fun, args);
     }
+
     /**
      * @param context
      * @param call
@@ -533,13 +535,23 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         List<Pair<String, Integer>> keyp = new ArrayList<Pair<String, Integer>>();
         posp.add(receiver);
         pospos.add(context.getSourceMap().getPosition(call.getChild(0)));
+        int argsVal = 0;
+        int kwargsVal = 0;
         for (int i = 2; i < call.getChildCount(); i++) {
             CAstNode cl = call.getChild(i);
             if (cl.getKind() == CAstNode.ARRAY_LITERAL) {
+                // kwargs
                 keyp.add(Pair.make(String.valueOf(cl.getChild(0).getValue()), context.getValue(cl.getChild(1))));
                 keypos.add(context.getSourceMap().getPosition(cl));
             } else {
-                posp.add(context.getValue(cl));
+                if (cl.getKind() == CAstNode.PRIMITIVE) {
+                    // *args
+                    argsVal = context.getValue(cl);
+//                    posp.add(argsVal);
+                } else {
+                    // args
+                    posp.add(context.getValue(cl));
+                }
                 pospos.add(context.getSourceMap().getPosition(cl));
             }
         }
@@ -556,7 +568,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         int pos = context.cfg().getCurrentInstruction();
         CallSiteReference site = new DynamicCallSiteReference(PythonTypes.CodeBody, pos);
 
-        context.cfg().addInstruction(new PythonInvokeInstruction(pos, result, exception, site, hack, keyp.toArray(new Pair[keyp.size()])));
+        context.cfg().addInstruction(new PythonInvokeInstruction(pos, result, exception, site, hack, keyp.toArray(new Pair[keyp.size()]), argsVal, kwargsVal));
 
         pospos.addAll(keypos);
         context.cfg().noteOperands(pos, pospos.toArray(new Position[pospos.size()]));
@@ -637,7 +649,12 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                         "script " + importedPath.toUri().toString().replace("file:///", "file:/") + ".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
             }
+        } else if (primitiveCall.getChildCount() == 1) {
 
+            int instNo = context.cfg().getCurrentInstruction();
+            context.setValue(primitiveCall, resultVal);
+            int v = context.getValue(primitiveCall.getChild(0));
+            context.cfg().addInstruction(new AssignInstruction(instNo, resultVal, v));
         }
     }
 

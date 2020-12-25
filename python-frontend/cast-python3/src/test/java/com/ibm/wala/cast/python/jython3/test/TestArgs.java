@@ -30,17 +30,18 @@ public class TestArgs extends TestPythonCallGraphShape {
     }
 
     @Test
-    public void testArgsKwargs3() throws WalaException, IOException, CancelException {
-        // thread
-        PythonAnalysisEngine<?> engine = makeEngine("args/arg_and_kwargs3.py");
+    public void testKwargs2() throws WalaException, IOException, CancelException {
+        PythonAnalysisEngine<?> engine = makeEngine("args/kwargs2.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         TestUtil.dumpCG(builder, cg);
     }
 
+
     @Test
-    public void testKwargs2() throws WalaException, IOException, CancelException {
-        PythonAnalysisEngine<?> engine = makeEngine("args/kwargs2.py");
+    public void testArgsKwargs3() throws WalaException, IOException, CancelException {
+        // thread
+        PythonAnalysisEngine<?> engine = makeEngine("args/arg_and_kwargs3.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         TestUtil.dumpCG(builder, cg);

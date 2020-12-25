@@ -11,4 +11,5 @@ def func3(arg3,a2,a3):
 
 
 r_args = [func3, "a3"]
-func2(*r_args)
+b=r_args
+func2(*b)
