@@ -541,7 +541,13 @@ public class PythonCAstToIRTranslator extends AstTranslator {
             CAstNode cl = call.getChild(i);
             if (cl.getKind() == CAstNode.ARRAY_LITERAL) {
                 // kwargs
-                keyp.add(Pair.make(String.valueOf(cl.getChild(0).getValue()), context.getValue(cl.getChild(1))));
+                if(cl.getChild(0).getValue()==null){
+                    // **kwargs
+                    kwargsVal=context.getValue(cl.getChild(1));
+                } else {
+                    // kwargs
+                    keyp.add(Pair.make(String.valueOf(cl.getChild(0).getValue()), context.getValue(cl.getChild(1))));
+                }
                 keypos.add(context.getSourceMap().getPosition(cl));
             } else {
                 if (cl.getKind() == CAstNode.PRIMITIVE) {

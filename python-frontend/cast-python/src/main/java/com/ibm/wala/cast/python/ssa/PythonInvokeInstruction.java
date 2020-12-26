@@ -62,6 +62,16 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
     }
 
     public int getNumberOfTotalParameters() {
+        int args = argsVal > 0 ? 1 : 0;
+        int kwargs = kwargsVal > 0 ? 1 : 0;
+        return positionalParams.length + keywordParams.length + args + kwargs;
+    }
+
+    /**
+     * 除去*arg， **kwargs
+     * @return
+     */
+    public int getNumberOfConstParameters() {
         return positionalParams.length + keywordParams.length;
     }
 
@@ -69,11 +79,11 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
     public int getNumberOfUses() {
         int args = argsVal > 0 ? 1 : 0;
         int kwargs = kwargsVal > 0 ? 1 : 0;
-        return positionalParams.length + keywordParams.length+args+kwargs;
+        return positionalParams.length + keywordParams.length + args + kwargs;
     }
 
     public List<String> getKeywords() {
-        List<String> names = new LinkedList<String>();
+        List<String> names = new LinkedList<>();
         for (Pair<String, ?> a : keywordParams) {
             names.add(a.fst);
         }
@@ -94,16 +104,16 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
     public int getUse(int j) throws UnsupportedOperationException {
         if (j < positionalParams.length) {
             return positionalParams[j];
-        } else if (j < keywordParams.length+positionalParams.length){
+        } else if (j < keywordParams.length + positionalParams.length) {
             return keywordParams[j - positionalParams.length].snd;
-        } else if (j==keywordParams.length+positionalParams.length){
-            if (argsVal>0){
+        } else if (j == keywordParams.length + positionalParams.length) {
+            if (argsVal > 0) {
                 return argsVal;
             } else {
                 return kwargsVal;
             }
         } else {
-            assert j<getNumberOfUses();
+            assert j < getNumberOfUses();
             return kwargsVal;
         }
     }
@@ -127,8 +137,8 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
 
         int[] newpos = positionalParams;
         Pair<String, Integer>[] newkey = keywordParams;
-        int argsVal=0;
-        int kwargsVal=0;
+        int argsVal = 0;
+        int kwargsVal = 0;
         if (uses != null && uses.length > 0) {
             int j = 0;
             newpos = new int[positionalParams.length];
@@ -139,15 +149,15 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
             for (int i = 0; i < keywordParams.length; i++, j++) {
                 newkey[i] = Pair.make(keywordParams[i].fst, uses[j]);
             }
-            if (j<this.getNumberOfUses()){
-                if (this.argsVal>0){
-                    argsVal=uses[j++];
+            if (j < this.getNumberOfUses()) {
+                if (this.argsVal > 0) {
+                    argsVal = uses[j++];
                 } else {
-                    kwargsVal=uses[j++];
+                    kwargsVal = uses[j++];
                 }
             }
-            if (j<this.getNumberOfUses()){
-                kwargsVal=uses[j++];
+            if (j < this.getNumberOfUses()) {
+                kwargsVal = uses[j++];
             }
         }
 

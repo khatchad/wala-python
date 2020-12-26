@@ -10,6 +10,7 @@
  *****************************************************************************/
 package com.ibm.wala.cast.python.ipa.callgraph;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +20,7 @@ import com.ibm.wala.cast.ir.ssa.AstIRFactory;
 import com.ibm.wala.cast.ir.ssa.AstLexicalAccess;
 import com.ibm.wala.cast.ir.ssa.AstLexicalRead;
 import com.ibm.wala.cast.loader.AstMethod;
+import com.ibm.wala.cast.loader.CAstAbstractModuleLoader;
 import com.ibm.wala.cast.loader.DynamicCallSiteReference;
 import com.ibm.wala.cast.python.ipa.summaries.PythonInstanceMethodTrampoline;
 import com.ibm.wala.cast.python.ipa.summaries.PythonSummarizedFunction;
@@ -26,6 +28,7 @@ import com.ibm.wala.cast.python.ipa.summaries.PythonSummary;
 import com.ibm.wala.cast.python.ir.PythonLanguage;
 import com.ibm.wala.cast.python.loader.PythonLoader;
 import com.ibm.wala.cast.python.ssa.PythonInvokeInstruction;
+import com.ibm.wala.cast.python.ssa.PythonPropertyRead;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.types.AstMethodReference;
 import com.ibm.wala.classLoader.CallSiteReference;
@@ -34,6 +37,8 @@ import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.MethodTargetSelector;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
+import com.ibm.wala.ssa.ConstantValue;
+import com.ibm.wala.ssa.SSAInstructionFactory;
 import com.ibm.wala.ssa.SSAReturnInstruction;
 import com.ibm.wala.types.FieldReference;
 import com.ibm.wala.types.MethodReference;
@@ -62,7 +67,7 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
             IClassHierarchy cha = receiver.getClassHierarchy();
 
             PythonInvokeInstruction call = (PythonInvokeInstruction) caller.getIR().getCalls(site)[0];
-            int realParaNum = call.getNumberOfTotalParameters();
+            int realParaNum = call.getNumberOfConstParameters();
             if (receiver.getAnnotations().contains(Annotation.make(PythonTypes.classMethod))
                     && !caller.getMethod().getName().toString().startsWith("cls_trampoline")
             ) {
@@ -217,8 +222,7 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                     codeBodies.put(key, new PythonSummarizedFunction(tr, x, receiver));
                 }
                 return codeBodies.get(key);
-            } else if (
-                    cha.isSubclassOf(receiver, cha.lookupClass(PythonTypes.trampoline))
+            } else if (cha.isSubclassOf(receiver, cha.lookupClass(PythonTypes.trampoline))
             ) {
                 // self
                 Pair<IClass, Integer> key = Pair.make(receiver, call.getNumberOfTotalParameters());
@@ -272,16 +276,64 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                 }
 
                 return codeBodies.get(key);
-            } else if (receiver instanceof PythonLoader.DynamicMethodBody
-                    && ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters() != realParaNum
+            } else if (receiver instanceof CAstAbstractModuleLoader.DynamicCodeBody
+                    && ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody().getNumberOfParameters() != realParaNum
+                    && !caller.getMethod().getName().toString().startsWith("args_trampoline")
             ) {
-                int defParaNum = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters();
-                Atom defFuncName = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getReference().getDeclaringClass().getName().getClassName();
+                int defParaNum = ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody().getNumberOfParameters();
+                Atom defFuncName = ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody().getReference().getDeclaringClass().getName().getClassName();
                 Atom trampolineName = Atom.findOrCreateUnicodeAtom("args_trampoline_" + defFuncName + "(" + realParaNum + ")");
+                MethodReference tr = MethodReference.findOrCreate(receiver.getReference(),
+                        trampolineName,
+                        AstMethodReference.fnDesc);
+                PythonSummary summaryFunc = new PythonSummary(tr, call.getNumberOfConstParameters());
+
+                int v = realParaNum;
+                int iindex = 1;
+
+                int[] params = new int[defParaNum - call.getNumberOfConstParameters()];
+                for (int i = 0; i < realParaNum; i++) {
+                    params[i] = i + 1;
+                }
                 // 若Call中有*args，取v_a=args
+                if (call.getArgsVal() > 0) {
+                    // 生成v_{real+1}=v_a.ref(0),v_{real+2}=v_a.ref(1), ..., v_{real+m}=v_a.ref(def-len(kw))
+                    for (int i = call.getNumberOfPositionalParameters(); i < defParaNum - call.getNumberOfConstParameters(); i++) {
+                        int refVal = v + i * 2 - 1;
+                        int idxVal = v + i * 2;
+                        int idx = i - call.getNumberOfPositionalParameters();
+                        summaryFunc.addConstant(refVal, new ConstantValue(idx));
+                        summaryFunc.addStatement(
+                                new PythonPropertyRead(iindex++, idxVal, call.getNumberOfConstParameters()+1, refVal));
+                    }
+                    for (int i = call.getNumberOfPositionalParameters(); i < defParaNum - call.getNumberOfConstParameters(); i++) {
+                        params[i] = v + i * 2;
+                    }
+                    v = v + realParaNum * 2;
+                }
 
-                // 生成v_{n+1}=v_a.ref(0),v_{n+2}=v_a.ref(1), ..., v_{defParaNum}=v_a.ref(paraNum-1)
+                Map<Integer, Atom> names = HashMapFactory.make();
+                int ki = 0;
+                int ji = call.getNumberOfPositionalParameters() + 1;
+                Pair<String, Integer>[] keys = new Pair[0];
+                if (call.getKeywords() != null) {
+                    keys = new Pair[call.getKeywords().size()];
+                    for (String k : call.getKeywords()) {
+                        names.put(ji, Atom.findOrCreateUnicodeAtom(k));
+                        keys[ki++] = Pair.make(k, ji++);
+                    }
+                }
 
+
+                int result = v++;
+                int except = v++;
+
+                CallSiteReference ref = new DynamicCallSiteReference(call.getCallSite().getDeclaredTarget(), 2);
+                summaryFunc.addStatement(new PythonInvokeInstruction(iindex++, result, except, ref, params, keys));
+                summaryFunc.addStatement(new SSAReturnInstruction(iindex++, result, false));
+                summaryFunc.setValueNames(names);
+
+                return new PythonSummarizedFunction(tr, summaryFunc, receiver);
             }
         }
 
