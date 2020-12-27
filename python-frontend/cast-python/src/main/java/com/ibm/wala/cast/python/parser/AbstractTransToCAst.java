@@ -1,8 +1,11 @@
 package com.ibm.wala.cast.python.parser;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collection;
 
@@ -31,6 +34,10 @@ public abstract class AbstractTransToCAst<T> implements TranslatorToCAst {
     };
 
     public final CAst cast = new CAstImpl();
+
+    protected abstract URL getParsedURL() throws IOException;
+
+    protected abstract Reader getReader() throws IOException;
 
     public abstract class CAstVisitor {
 

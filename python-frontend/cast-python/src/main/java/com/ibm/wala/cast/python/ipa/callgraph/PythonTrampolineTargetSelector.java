@@ -27,9 +27,11 @@ import com.ibm.wala.cast.python.ipa.summaries.PythonSummarizedFunction;
 import com.ibm.wala.cast.python.ipa.summaries.PythonSummary;
 import com.ibm.wala.cast.python.ir.PythonLanguage;
 import com.ibm.wala.cast.python.loader.PythonLoader;
+import com.ibm.wala.cast.python.parser.PythonSourcePosition;
 import com.ibm.wala.cast.python.ssa.PythonInvokeInstruction;
 import com.ibm.wala.cast.python.ssa.PythonPropertyRead;
 import com.ibm.wala.cast.python.types.PythonTypes;
+import com.ibm.wala.cast.tree.CAstSourcePositionMap;
 import com.ibm.wala.cast.types.AstMethodReference;
 import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.classLoader.IClass;
@@ -277,56 +279,74 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
 
                 return codeBodies.get(key);
             } else if (receiver instanceof CAstAbstractModuleLoader.DynamicCodeBody
-                    && ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody().getNumberOfParameters() != realParaNum
+                    && ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody().getNumberOfParameters() > realParaNum
                     && !caller.getMethod().getName().toString().startsWith("args_trampoline")
             ) {
-                int defParaNum = ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody().getNumberOfParameters();
-                Atom defFuncName = ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody().getReference().getDeclaringClass().getName().getClassName();
+
+                AstMethod targetCodeBody = ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody();
+                int defParaNum = targetCodeBody.getNumberOfParameters();
+                Atom defFuncName = targetCodeBody.getReference().getDeclaringClass().getName().getClassName();
                 Atom trampolineName = Atom.findOrCreateUnicodeAtom("args_trampoline_" + defFuncName + "(" + realParaNum + ")");
                 MethodReference tr = MethodReference.findOrCreate(receiver.getReference(),
                         trampolineName,
                         AstMethodReference.fnDesc);
                 PythonSummary summaryFunc = new PythonSummary(tr, call.getNumberOfConstParameters());
 
-                int v = realParaNum;
+                int currFreeVal = call.getNumberOfTotalParameters()+1;
                 int iindex = 1;
 
-                int[] params = new int[defParaNum - call.getNumberOfConstParameters()];
-                for (int i = 0; i < realParaNum; i++) {
+                int[] params = new int[defParaNum - call.getNumberOfKeywordParameters()];
+                for (int i = 0; i < call.getNumberOfPositionalParameters(); i++) {
                     params[i] = i + 1;
                 }
                 // 若Call中有*args，取v_a=args
+                int currParam = call.getNumberOfConstParameters();
                 if (call.getArgsVal() > 0) {
+                    currParam++;
                     // 生成v_{real+1}=v_a.ref(0),v_{real+2}=v_a.ref(1), ..., v_{real+m}=v_a.ref(def-len(kw))
-                    for (int i = call.getNumberOfPositionalParameters(); i < defParaNum - call.getNumberOfConstParameters(); i++) {
-                        int refVal = v + i * 2 - 1;
-                        int idxVal = v + i * 2;
-                        int idx = i - call.getNumberOfPositionalParameters();
+                    for (int i = 0; i < defParaNum - call.getNumberOfConstParameters(); i++) {
+                        int refVal = currFreeVal++;
+                        int idxVal = currFreeVal++;
+                        int idx = i;
                         summaryFunc.addConstant(refVal, new ConstantValue(idx));
                         summaryFunc.addStatement(
-                                new PythonPropertyRead(iindex++, idxVal, call.getNumberOfConstParameters()+1, refVal));
+                                new PythonPropertyRead(iindex++, idxVal, currParam, refVal));
+                        params[call.getNumberOfPositionalParameters()+i] = idxVal;
                     }
-                    for (int i = call.getNumberOfPositionalParameters(); i < defParaNum - call.getNumberOfConstParameters(); i++) {
-                        params[i] = v + i * 2;
-                    }
-                    v = v + realParaNum * 2;
                 }
 
+                // 取kwargs
                 Map<Integer, Atom> names = HashMapFactory.make();
+                Set<String> constKeys = new HashSet<>();
                 int ki = 0;
                 int ji = call.getNumberOfPositionalParameters() + 1;
                 Pair<String, Integer>[] keys = new Pair[0];
                 if (call.getKeywords() != null) {
                     keys = new Pair[call.getKeywords().size()];
                     for (String k : call.getKeywords()) {
+                        constKeys.add(k);
                         names.put(ji, Atom.findOrCreateUnicodeAtom(k));
                         keys[ki++] = Pair.make(k, ji++);
                     }
                 }
 
+                if (call.getKwargsVal() > 0) {
+                    currParam++;
+                    for (int i = 1; i < defParaNum; i++) {
+                        CAstSourcePositionMap.Position position = ((CAstAbstractModuleLoader.DynamicCodeBody) receiver).getCodeBody().debugInfo().getParameterPosition(1);
+                        if (position instanceof PythonSourcePosition) {
+                            String argKey = ((PythonSourcePosition) position).getString();
+                            if (!constKeys.contains(argKey)) {
+                                FieldReference field = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(argKey), PythonTypes.Root);
+                                summaryFunc.addStatement(PythonLanguage.Python.instructionFactory()
+                                        .GetInstruction(iindex++, currFreeVal++, currParam, field));
+                            }
+                        }
+                    }
+                }
 
-                int result = v++;
-                int except = v++;
+                int result = currFreeVal++;
+                int except = currFreeVal++;
 
                 CallSiteReference ref = new DynamicCallSiteReference(call.getCallSite().getDeclaredTarget(), 2);
                 summaryFunc.addStatement(new PythonInvokeInstruction(iindex++, result, except, ref, params, keys));

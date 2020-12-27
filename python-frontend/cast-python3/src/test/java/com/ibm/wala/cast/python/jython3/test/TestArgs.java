@@ -55,4 +55,13 @@ public class TestArgs extends TestPythonCallGraphShape {
         TestUtil.dumpCG(builder, cg);
     }
 
+
+    @Test
+    public void testArgsKwargs0() throws WalaException, IOException, CancelException {
+        PythonAnalysisEngine<?> engine = makeEngine("args/arg_and_kwargs0.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        TestUtil.hasEdge(cg, "func1","func3");
+        TestUtil.hasEdge(cg, "func2","func3");
+    }
 }

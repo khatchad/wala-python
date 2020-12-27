@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 
 import com.ibm.wala.cast.python.parser.AbstractTransToCAst;
 import com.ibm.wala.cast.python.parser.PythonCodeEntity;
+import com.ibm.wala.cast.python.parser.PythonSourcePosition;
 import com.ibm.wala.cast.tree.*;
 import org.python.antlr.PythonTree;
 import org.python.antlr.ast.Assert;
@@ -245,7 +246,12 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
                 last_col = lines[lines.length - 1].length();
             }
 
-            return new AbstractSourcePosition() {
+            return new PythonSourcePosition() {
+
+                @Override
+                public String getString() {
+                    return p.getText();
+                }
 
                 @Override
                 public URL getURL() {
@@ -304,7 +310,16 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
             if (p.length > 1) {
                 Position start = pos;
                 Position end = makePosition(p[p.length - 1]);
-                pos = new AbstractSourcePosition() {
+                pos = new PythonSourcePosition() {
+
+                    @Override
+                    public String getString() {
+                        StringBuilder sb=new StringBuilder();
+                        for (PythonTree pt:p){
+                            sb.append(pt.getText());
+                        }
+                        return sb.toString();
+                    }
 
                     @Override
                     public int getFirstLine() {
@@ -1895,11 +1910,7 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
 
     protected abstract WalaPythonParser makeParser() throws IOException;
 
-    protected abstract Reader getReader() throws IOException;
-
     protected abstract String scriptName();
-
-    protected abstract URL getParsedURL() throws IOException;
 
     public final CAstTypeDictionaryImpl<String> types;
 

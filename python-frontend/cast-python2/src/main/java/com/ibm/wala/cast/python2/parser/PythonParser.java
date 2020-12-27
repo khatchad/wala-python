@@ -1635,11 +1635,7 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
 	
 	protected abstract WalaPythonParser makeParser() throws IOException;
 	
-	protected abstract Reader getReader() throws IOException;
-	
 	protected abstract String scriptName();
-
-	protected abstract URL getParsedURL() throws IOException;
 
 	private final CAstTypeDictionaryImpl<String> types;
 	
