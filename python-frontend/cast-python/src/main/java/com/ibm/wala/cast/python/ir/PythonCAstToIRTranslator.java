@@ -854,9 +854,9 @@ public class PythonCAstToIRTranslator extends AstTranslator {
 
     @Override
     protected Position[] getParameterPositions(CAstEntity e) {
-        Position[] ps = new Position[e.getArgumentCount()];
+        Position[] ps = new Position[Math.max(1,e.getArgumentCount())];
         for (int i = 1; i < e.getArgumentCount(); i++) {
-            ps[i] = e.getPosition(i - 1);
+            ps[i] = e.getPosition(i);
         }
         return ps;
     }
