@@ -3,7 +3,6 @@ package com.ibm.wala.cast.python.jython3.test;
 import com.ibm.wala.cast.python.client.PythonAnalysisEngine;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.propagation.PropagationCallGraphBuilder;
-import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.NullProgressMonitor;
 import com.ibm.wala.util.WalaException;
@@ -59,7 +58,6 @@ public class TestArgs extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("args/kwargs5.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        TestUtil.dumpCG(builder, cg);
         Assert.assertTrue(TestUtil.hasEdge(cg, "func4", "func5"));
     }
 
@@ -69,7 +67,7 @@ public class TestArgs extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("args/arg_and_kwargs3.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        TestUtil.dumpCG(builder, cg);
+        Assert.assertTrue(TestUtil.hasEdge(cg, "func2", "func3"));
     }
 
     @Test
@@ -77,7 +75,7 @@ public class TestArgs extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("args/arg_and_kwargs2.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        TestUtil.dumpCG(builder, cg);
+        Assert.assertTrue(TestUtil.hasEdge(cg, "func5", "func6"));
     }
 
 

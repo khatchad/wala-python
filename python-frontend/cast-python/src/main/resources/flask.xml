@@ -17,13 +17,6 @@
                           ref="Cos"
                           value="system"/>
 
-                <new def="get" class="Los/function/get"/>
-                <putfield class="LRoot"
-                          field="get"
-                          fieldType="LRoot"
-                          ref="Cos"
-                          value="get"/>
-
                 <return value="Cos"/>
             </method>
         </class>
@@ -32,12 +25,7 @@
             <class name="system" allocatable="true">
                 <!-- 所有调用均为xxx.py.do(realFunc,args)，例如cfg.py.do(os.system, "1")-->
                 <method name="do" descriptor="()LRoot;" numArgs="2" paramNames="self value">
-                    <return value="self"/>
-                </method>
-            </class>
-            <class name="get" allocatable="true">
-                <method name="do" descriptor="()LRoot;" numArgs="6" paramNames="self a b c d e">
-                    <return value="self"/>
+                    <return value="value"/>
                 </method>
             </class>
         </package>
@@ -68,8 +56,6 @@
                           fieldType="LRoot"
                           ref="request"
                           value="form"/>
-
-
                 <return value="x"/>
             </method>
         </class>

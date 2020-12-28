@@ -1,6 +1,9 @@
 package com.ibm.wala.cast.python.client;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import com.ibm.wala.cast.ipa.callgraph.AstCFAPointerKeys;
@@ -59,155 +62,176 @@ import com.ibm.wala.util.WalaRuntimeException;
 import com.ibm.wala.util.collections.HashSetFactory;
 
 public abstract class PythonAnalysisEngine<T>
-		extends AbstractAnalysisEngine<InstanceKey, PythonSSAPropagationCallGraphBuilder, T> {
+        extends AbstractAnalysisEngine<InstanceKey, PythonSSAPropagationCallGraphBuilder, T> {
 
-	private static Class<? extends PythonLoaderFactory> loaders;
-	
-	public static void setLoaderFactory(Class<? extends PythonLoaderFactory> lf) {
- 		loaders = lf;
-	}
-	
-	private final PythonLoaderFactory loader;
-	
-	private final IRFactory<IMethod> irs = AstIRFactory.makeDefaultFactory();
+    private static Class<? extends PythonLoaderFactory> loaders;
 
-	public PythonAnalysisEngine() {
-		super();
-		PythonLoaderFactory f;
-		try {
-			f = loaders.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
-			f = null;
-			assert false : e.getMessage();
-		} catch (NullPointerException e){
-			f = null;
-			assert false : "PythonLoaderFactory is null";
-		}
-		loader = f;
-	}
+    public static void setLoaderFactory(Class<? extends PythonLoaderFactory> lf) {
+        loaders = lf;
+    }
 
-	@Override
-	public void buildAnalysisScope() throws IOException {
-		scope = new PythonAnalysisScope();
-		
-		for(Module o : moduleFiles) {
-			scope.addToScope(PythonTypes.pythonLoader, o);			
-		}
-	}
+    private final PythonLoaderFactory loader;
 
-	@Override
-	public IClassHierarchy buildClassHierarchy() {
-		try {
+    private final IRFactory<IMethod> irs = AstIRFactory.makeDefaultFactory();
+
+    private final List<String> syntheticXMLs = new LinkedList<>();
+
+    public PythonAnalysisEngine(String[] xmls) {
+        super();
+        PythonLoaderFactory f;
+        try {
+            f = loaders.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            f = null;
+            assert false : e.getMessage();
+        } catch (NullPointerException e) {
+            f = null;
+            assert false : "PythonLoaderFactory is null";
+        }
+        loader = f;
+        syntheticXMLs.addAll(Arrays.asList(xmls));
+    }
+
+    public PythonAnalysisEngine() {
+        super();
+        PythonLoaderFactory f;
+        try {
+            f = loaders.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            f = null;
+            assert false : e.getMessage();
+        } catch (NullPointerException e) {
+            f = null;
+            assert false : "PythonLoaderFactory is null";
+        }
+        loader = f;
+        syntheticXMLs.add("flask.xml");
+        syntheticXMLs.add("pandas.xml");
+        syntheticXMLs.add("functools.xml");
+    }
+
+    @Override
+    public void buildAnalysisScope() throws IOException {
+        scope = new PythonAnalysisScope();
+
+        for (Module o : moduleFiles) {
+            scope.addToScope(PythonTypes.pythonLoader, o);
+        }
+    }
+
+    @Override
+    public IClassHierarchy buildClassHierarchy() {
+        try {
 //			IClassHierarchy cha = ClassHierarchyFactory.makeWithRoot(scope, loader);
-			IClassHierarchy cha = SeqClassHierarchyFactory.make(scope, loader);
-			Util.checkForFrontEndErrors(cha);
-			setClassHierarchy(cha);
-			return cha;
-		} catch (ClassHierarchyException e) {
-			assert false : e;
-			return null;
-		} catch (WalaException e) {
-			throw new WalaRuntimeException(e.getMessage());
-		}
-	}
+            IClassHierarchy cha = SeqClassHierarchyFactory.make(scope, loader);
+            Util.checkForFrontEndErrors(cha);
+            setClassHierarchy(cha);
+            return cha;
+        } catch (ClassHierarchyException e) {
+            assert false : e;
+            return null;
+        } catch (WalaException e) {
+            throw new WalaRuntimeException(e.getMessage());
+        }
+    }
 
-	protected void addSummaryBypassLogic(AnalysisOptions options, String summary) {
-		IClassHierarchy cha = getClassHierarchy();
-		XMLMethodSummaryReader xml = new XMLMethodSummaryReader(getClass().getClassLoader().getResourceAsStream(summary), scope);
-		for(TypeReference t : xml.getAllocatableClasses()) {
-			BypassSyntheticClassLoader ldr = (BypassSyntheticClassLoader) cha.getLoader(scope.getSyntheticLoader());
-			ldr.registerClass(t.getName(), new PythonSyntheticClass(t, cha));
-		}
-	
-		MethodTargetSelector targetSelector = options.getMethodTargetSelector();
-		targetSelector = new BypassMethodTargetSelector(targetSelector, xml.getSummaries(), xml.getIgnoredPackages(), cha);
-		options.setSelector(targetSelector);
-	
-		ClassTargetSelector cs = 
-			new BypassClassTargetSelector(options.getClassTargetSelector(), 
-					xml.getAllocatableClasses(), 
-					cha, 
-					cha.getLoader(scope.getSyntheticLoader()));
-		options.setSelector(cs);
-	}
+    protected void addSummaryBypassLogic(AnalysisOptions options, String summary) {
+        IClassHierarchy cha = getClassHierarchy();
+        XMLMethodSummaryReader xml = new XMLMethodSummaryReader(getClass().getClassLoader().getResourceAsStream(summary), scope);
+        for (TypeReference t : xml.getAllocatableClasses()) {
+            BypassSyntheticClassLoader ldr = (BypassSyntheticClassLoader) cha.getLoader(scope.getSyntheticLoader());
+            ldr.registerClass(t.getName(), new PythonSyntheticClass(t, cha));
+        }
 
-	protected void addBypassLogic(IClassHierarchy cha, AnalysisOptions options) {
-		options.setSelector(
-			new PythonTrampolineTargetSelector(
-				new PythonConstructorTargetSelector(
-					new PythonComprehensionTrampolines(
-						options.getMethodTargetSelector()))));
-		
-		BuiltinFunctions builtins = new BuiltinFunctions(cha);
-		options.setSelector(
-			builtins.builtinClassTargetSelector(
-				options.getClassTargetSelector()));
+        MethodTargetSelector targetSelector = options.getMethodTargetSelector();
+        targetSelector = new BypassMethodTargetSelector(targetSelector, xml.getSummaries(), xml.getIgnoredPackages(), cha);
+        options.setSelector(targetSelector);
 
-		// 添加函数摘要, 如: <subprocess/function/call>
-		addSummaryBypassLogic(options, "flask.xml");
-		addSummaryBypassLogic(options, "pandas.xml");
-		addSummaryBypassLogic(options, "functools.xml");
-	}
+        ClassTargetSelector cs =
+                new BypassClassTargetSelector(options.getClassTargetSelector(),
+                        xml.getAllocatableClasses(),
+                        cha,
+                        cha.getLoader(scope.getSyntheticLoader()));
+        options.setSelector(cs);
+    }
 
-	// FIXME path/scriptname
-	private String scriptName(Module m) {
-		String path = ((ModuleEntry)m).getName();
-		return "Lscript " + path;
-	}
+    protected void addBypassLogic(IClassHierarchy cha, AnalysisOptions options) {
+        options.setSelector(
+                new PythonTrampolineTargetSelector(
+                        new PythonConstructorTargetSelector(
+                                new PythonComprehensionTrampolines(
+                                        options.getMethodTargetSelector()))));
 
-	@Override
-	protected Iterable<Entrypoint> makeDefaultEntrypoints(AnalysisScope scope, IClassHierarchy cha) {
-		Set<Entrypoint> result = HashSetFactory.make();
-		for(Module m : moduleFiles) {
-			IClass entry = cha.lookupClass(TypeReference.findOrCreate(PythonTypes.pythonLoader, TypeName.findOrCreate(scriptName(m))));
-			assert entry != null: "bad root name " + scriptName(m) + ":\n" + cha;
-			MethodReference er = MethodReference.findOrCreate(entry.getReference(), AstMethodReference.fnSelector);
-			result.add(new DefaultEntrypoint(er, cha));
-		}
-		return result;
-	}
+        BuiltinFunctions builtins = new BuiltinFunctions(cha);
+        options.setSelector(
+                builtins.builtinClassTargetSelector(
+                        options.getClassTargetSelector()));
 
-	
-	@Override
-	protected PythonSSAPropagationCallGraphBuilder getCallGraphBuilder(IClassHierarchy cha, AnalysisOptions options, IAnalysisCacheView cache2) {
-		IAnalysisCacheView cache = new AnalysisCacheImpl(irs, options.getSSAOptions());
-		
-		options.setSelector(new ClassHierarchyClassTargetSelector(cha));
-		options.setSelector(new ClassHierarchyMethodTargetSelector(cha));
+        // 添加函数摘要, 如: <subprocess/function/call>
+        for (String xml:syntheticXMLs){
+            addSummaryBypassLogic(options, xml);
+        }
+    }
 
-		addBypassLogic(cha, options);
-		
-		options.setUseConstantSpecificKeys(true);
-		
-		SSAOptions ssaOptions = options.getSSAOptions();
-		ssaOptions.setDefaultValues(new DefaultValues() {
-			@Override
-			public int getDefaultValue(SymbolTable symtab, int valueNumber) {
-				return symtab.getNullConstant();
-			} 
-		});
-		options.setSSAOptions(ssaOptions);
-		
-		PythonSSAPropagationCallGraphBuilder builder = 
-			makeBuilder(cha, options, cache);
-	
-		AstContextInsensitiveSSAContextInterpreter interpreter = new AstContextInsensitiveSSAContextInterpreter(options, cache);
-		builder.setContextInterpreter(interpreter);
-	
-		builder.setContextSelector(new nCFAContextSelector(1, new ContextInsensitiveSelector()));
-	
-		builder.setInstanceKeys(new PythonScopeMappingInstanceKeys(builder, new ZeroXInstanceKeys(options, cha, interpreter, ZeroXInstanceKeys.ALLOCATIONS)));
-	
-		new PythonSuper(cha).handleSuperCalls(builder, options);
-		
-		return builder;
-	}
+    // FIXME path/scriptname
+    private String scriptName(Module m) {
+        String path = ((ModuleEntry) m).getName();
+        return "Lscript " + path;
+    }
 
-	protected PythonSSAPropagationCallGraphBuilder makeBuilder(IClassHierarchy cha, AnalysisOptions options,
-			IAnalysisCacheView cache) {
-		return new PythonSSAPropagationCallGraphBuilder(cha, options, cache, new AstCFAPointerKeys());
-	}
+    @Override
+    protected Iterable<Entrypoint> makeDefaultEntrypoints(AnalysisScope scope, IClassHierarchy cha) {
+        Set<Entrypoint> result = HashSetFactory.make();
+        for (Module m : moduleFiles) {
+            IClass entry = cha.lookupClass(TypeReference.findOrCreate(PythonTypes.pythonLoader, TypeName.findOrCreate(scriptName(m))));
+            assert entry != null : "bad root name " + scriptName(m) + ":\n" + cha;
+            MethodReference er = MethodReference.findOrCreate(entry.getReference(), AstMethodReference.fnSelector);
+            result.add(new DefaultEntrypoint(er, cha));
+        }
+        return result;
+    }
 
-	public abstract T performAnalysis(PropagationCallGraphBuilder builder) throws CancelException;
+
+    @Override
+    protected PythonSSAPropagationCallGraphBuilder getCallGraphBuilder(IClassHierarchy cha, AnalysisOptions options, IAnalysisCacheView cache2) {
+        IAnalysisCacheView cache = new AnalysisCacheImpl(irs, options.getSSAOptions());
+
+        options.setSelector(new ClassHierarchyClassTargetSelector(cha));
+        options.setSelector(new ClassHierarchyMethodTargetSelector(cha));
+
+        addBypassLogic(cha, options);
+
+        options.setUseConstantSpecificKeys(true);
+
+        SSAOptions ssaOptions = options.getSSAOptions();
+        ssaOptions.setDefaultValues(new DefaultValues() {
+            @Override
+            public int getDefaultValue(SymbolTable symtab, int valueNumber) {
+                return symtab.getNullConstant();
+            }
+        });
+        options.setSSAOptions(ssaOptions);
+
+        PythonSSAPropagationCallGraphBuilder builder =
+                makeBuilder(cha, options, cache);
+
+        AstContextInsensitiveSSAContextInterpreter interpreter = new AstContextInsensitiveSSAContextInterpreter(options, cache);
+        builder.setContextInterpreter(interpreter);
+
+        builder.setContextSelector(new nCFAContextSelector(1, new ContextInsensitiveSelector()));
+
+        builder.setInstanceKeys(new PythonScopeMappingInstanceKeys(builder, new ZeroXInstanceKeys(options, cha, interpreter, ZeroXInstanceKeys.ALLOCATIONS)));
+
+        new PythonSuper(cha).handleSuperCalls(builder, options);
+
+        return builder;
+    }
+
+    protected PythonSSAPropagationCallGraphBuilder makeBuilder(IClassHierarchy cha, AnalysisOptions options,
+                                                               IAnalysisCacheView cache) {
+        return new PythonSSAPropagationCallGraphBuilder(cha, options, cache, new AstCFAPointerKeys());
+    }
+
+    public abstract T performAnalysis(PropagationCallGraphBuilder builder) throws CancelException;
 
 }

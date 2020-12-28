@@ -1,11 +1,10 @@
 # 所有做完的效果
 def func1(func1, func2, arg1, func3):
-    func2(arg1)
-    func3(arg1)
+    func2(func3, arg1)
 
 
-def func5(arg):
-    print("func5")
+def func5(func, arg):
+    func(arg)
     return arg
 
 
