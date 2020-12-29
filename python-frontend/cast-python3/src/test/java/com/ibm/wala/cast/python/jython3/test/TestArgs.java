@@ -75,6 +75,7 @@ public class TestArgs extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("args/arg_and_kwargs2.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        TestUtil.dumpCG(builder, cg);
         Assert.assertTrue(TestUtil.hasEdge(cg, "func5", "func6"));
     }
 
