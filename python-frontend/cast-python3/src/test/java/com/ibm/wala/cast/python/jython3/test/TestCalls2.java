@@ -18,7 +18,6 @@ public class TestCalls2 extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("call2/calls1.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        TestUtil.dumpCG(builder, CG);
         Assert.assertTrue(TestUtil.hasEdge(CG,  "mythread", "id"));
     }
 

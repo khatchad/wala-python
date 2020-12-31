@@ -554,7 +554,6 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
                 public Collection<CAstType> getSupertypes() {
                     Collection<CAstType> supertypes = HashSetFactory.make();
                     for (expr e : arg0.getInternalBases()) {
-                        System.out.println(arg0.getInternalName() + " " + arg0.getType() + " extends " + e.getText() + " " + e.getType());
                         try {
                             CAstType type = types.getCAstTypeFor(e.getText());
                             if (type != null) {

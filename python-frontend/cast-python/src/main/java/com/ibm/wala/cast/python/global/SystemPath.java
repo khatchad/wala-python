@@ -35,6 +35,7 @@ public class SystemPath {
 
     public Path getImportModule(String scriptName, String module) {
         // if app module
+        // FIXME unix上appPath.toUri() 有问题
         if (scriptName.startsWith(appPath.toUri().toString().replace("file:///", "file:/"))) {
 
             Path importScript = PathUtil.getPath(scriptName);

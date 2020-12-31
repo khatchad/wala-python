@@ -651,14 +651,14 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
             } else {
                 // TODO 要找一下是否在xml变量中
-//                Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
-//                FieldReference global = makeGlobalRef(
-//                        "script " + importedPath.toUri().toString().replace("file:///", "file:/") + ".py");
-//                context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
-                int instNo = context.cfg().getCurrentInstruction();
-                TypeReference importType = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + nameToken);
-                MethodReference call = MethodReference.findOrCreate(importType, "import", "()L" + primitiveCall.getChild(1).getValue());
-                context.cfg().addInstruction(Python.instructionFactory().InvokeInstruction(instNo, resultVal, new int[0], context.currentScope().allocateTempValue(), CallSiteReference.make(instNo, call, Dispatch.STATIC), null));
+                Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
+                FieldReference global = makeGlobalRef(
+                        "script " + importedPath.toUri().toString().replace("file:///", "file:/") + ".py");
+                context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
+//                int instNo = context.cfg().getCurrentInstruction();
+//                TypeReference importType = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + nameToken);
+//                MethodReference call = MethodReference.findOrCreate(importType, "import", "()L" + primitiveCall.getChild(1).getValue());
+//                context.cfg().addInstruction(Python.instructionFactory().InvokeInstruction(instNo, resultVal, new int[0], context.currentScope().allocateTempValue(), CallSiteReference.make(instNo, call, Dispatch.STATIC), null));
             }
         } else if (primitiveCall.getChildCount() == 1) {
 
