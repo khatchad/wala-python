@@ -57,8 +57,8 @@ public class TestMultiStar extends TestPythonCallGraphShape {
     @Test
     public void testStar2() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/__init__.py",
-                "pkg1/moduleD.py",
+                "modules/pkg1/__init__.py",
+                "modules/pkg1/moduleD.py",
                 "caseStar2/moduleN.py",
                 "ana1.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();

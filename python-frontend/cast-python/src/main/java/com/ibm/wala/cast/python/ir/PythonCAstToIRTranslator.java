@@ -652,6 +652,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
             } else {
                 // TODO 要找一下是否在xml变量中
+                // FIXME BIF走注释
                 Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
                 FieldReference global = makeGlobalRef(
                         "script " + PathUtil.getUriString(importedPath) + ".py");
@@ -705,7 +706,9 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, declVal, fnField));
                 // 当import xxx as b的时候，不declare
                 String declareField = n.getChild(1).getChild(1).getValue().toString();
-                if (declareField.equals(declToken) && context.currentScope().isGlobal(context.currentScope().lookup(declareField))) {
+                // FIXME BIF不走条件
+//                if (declareField.equals(declToken) && context.currentScope().isGlobal(context.currentScope().lookup(declareField))) {
+                if (declareField.equals(declToken)) {
                     CAstSymbol pkgSymbol = new CAstSymbolImpl(importCAst.getChild(1).getValue().toString(), PythonCAstToIRTranslator.Any);
                     context.currentScope().declare(pkgSymbol, context.getValue(importCAst));
                 }

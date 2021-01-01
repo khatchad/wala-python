@@ -19,8 +19,8 @@ public class TestMultiPkg extends TestPythonCallGraphShape {
     @Test
     public void testPkgJ() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/__init__.py",
-                "pkg1/moduleD.py",
+                "modules/pkg1/__init__.py",
+                "modules/pkg1/moduleD.py",
                 "moduleJ.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
@@ -32,8 +32,8 @@ public class TestMultiPkg extends TestPythonCallGraphShape {
     @Test
     public void testPkgK() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/__init__.py",
-                "pkg1/moduleD.py",
+                "modules/pkg1/__init__.py",
+                "modules/pkg1/moduleD.py",
                 "moduleK.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
@@ -45,8 +45,8 @@ public class TestMultiPkg extends TestPythonCallGraphShape {
     @Test
     public void testPkgL() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/__init__.py",
-                "pkg1/moduleD.py",
+                "modules/pkg1/__init__.py",
+                "modules/pkg1/moduleD.py",
                 "moduleL.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
@@ -58,11 +58,11 @@ public class TestMultiPkg extends TestPythonCallGraphShape {
     @Test
     public void testPkgM() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/__init__.py",
-                "pkg1/subpkg1/__init__.py",
-                "pkg1/subpkg1/moduleA.py",
-                "pkg1/subpkg2/__init__.py",
-                "pkg1/subpkg2/moduleG.py",
+                "modules/pkg1/__init__.py",
+                "modules/pkg1/subpkg1/__init__.py",
+                "modules/pkg1/subpkg1/moduleA.py",
+                "modules/pkg1/subpkg2/__init__.py",
+                "modules/pkg1/subpkg2/moduleG.py",
                 "moduleM.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());

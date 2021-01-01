@@ -18,7 +18,7 @@ public class TestMultiRel extends TestPythonCallGraphShape {
 
     @Test
     public void testRelPath() throws WalaException, IllegalArgumentException, CancelException, IOException {
-        PythonAnalysisEngine<?> engine = makeEngine("pkg1/subpkg1/moduleB.py");
+        PythonAnalysisEngine<?> engine = makeEngine("modules/pkg1/subpkg1/moduleB.py");
 //        PythonAnalysisEngine<?> engine = makeEngine("moduleJ.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
@@ -30,10 +30,10 @@ public class TestMultiRel extends TestPythonCallGraphShape {
     @Test
     public void testRelB() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "multi1.py",
-                "pkg1/subpkg1/moduleA.py",
-                "pkg1/subpkg1/__init__.py",
-                "pkg1/subpkg1/moduleB.py");
+                "from_import.py",
+                "modules/pkg1/subpkg1/moduleA.py",
+                "modules/pkg1/subpkg1/__init__.py",
+                "modules/pkg1/subpkg1/moduleB.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         CAstCallGraphUtil.AVOID_DUMP = false;
@@ -44,9 +44,9 @@ public class TestMultiRel extends TestPythonCallGraphShape {
     @Test
     public void testRelC() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/subpkg1/moduleA.py",
-                "pkg1/subpkg1/__init__.py",
-                "pkg1/subpkg1/moduleC.py");
+                "modules/pkg1/subpkg1/moduleA.py",
+                "modules/pkg1/subpkg1/__init__.py",
+                "modules/pkg1/subpkg1/moduleC.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         CAstCallGraphUtil.AVOID_DUMP = false;
@@ -57,9 +57,9 @@ public class TestMultiRel extends TestPythonCallGraphShape {
     @Test
     public void testRelE() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/moduleD.py",
-                "pkg1/subpkg1/__init__.py",
-                "pkg1/subpkg1/moduleE.py");
+                "modules/pkg1/moduleD.py",
+                "modules/pkg1/subpkg1/__init__.py",
+                "modules/pkg1/subpkg1/moduleE.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         CAstCallGraphUtil.AVOID_DUMP = false;
@@ -70,9 +70,9 @@ public class TestMultiRel extends TestPythonCallGraphShape {
     @Test
     public void testRelG() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/subpkg1/moduleA.py",
-                "pkg1/subpkg1/__init__.py",
-                "pkg1/subpkg2/moduleG.py");
+                "modules/pkg1/subpkg1/moduleA.py",
+                "modules/pkg1/subpkg1/__init__.py",
+                "modules/pkg1/subpkg2/moduleG.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         CAstCallGraphUtil.AVOID_DUMP = false;
@@ -83,9 +83,9 @@ public class TestMultiRel extends TestPythonCallGraphShape {
     @Test
     public void testRelH() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
-                "pkg1/subpkg1/moduleA.py",
-                "pkg1/subpkg1/__init__.py",
-                "pkg1/subpkg2/moduleH.py");
+                "modules/pkg1/subpkg1/moduleA.py",
+                "modules/pkg1/subpkg1/__init__.py",
+                "modules/pkg1/subpkg2/moduleH.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         CAstCallGraphUtil.AVOID_DUMP = false;
