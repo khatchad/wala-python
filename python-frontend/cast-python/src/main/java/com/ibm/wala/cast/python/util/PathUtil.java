@@ -18,6 +18,15 @@ public class PathUtil {
         return relPath(fullPath, rootPath.split("/"));
     }
 
+    public static String getUriString(Path path){
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("windows")){
+            return path.toUri().toString().replace("file:///", "file:/");
+        } else {
+            return path.toString();
+        }
+    }
+
 
     public static Path getPath(URL url){
         if (System.getProperty("os.name").toLowerCase().contains("windows")){

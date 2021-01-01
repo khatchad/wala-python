@@ -29,6 +29,7 @@ import com.ibm.wala.cast.python.loader.PythonLoader;
 import com.ibm.wala.cast.python.parser.PythonCodeEntity;
 import com.ibm.wala.cast.python.ssa.PythonInvokeInstruction;
 import com.ibm.wala.cast.python.types.PythonTypes;
+import com.ibm.wala.cast.python.util.PathUtil;
 import com.ibm.wala.cast.tree.CAstEntity;
 import com.ibm.wala.cast.tree.CAstNode;
 import com.ibm.wala.cast.tree.CAstSourcePositionMap.Position;
@@ -647,13 +648,13 @@ public class PythonCAstToIRTranslator extends AstTranslator {
             } else if (ImportType.INIT.equals(primitiveCall.getChild(0).getValue())) {
                 Path importedPath = SystemPath.getInstance().getImportModule(context.file(), "." + nameToken);
                 FieldReference global = makeGlobalRef(
-                        "script " + importedPath.toUri().toString().replace("file:///", "file:/") + ".py");
+                        "script " + PathUtil.getUriString(importedPath) + ".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
             } else {
                 // TODO 要找一下是否在xml变量中
                 Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
                 FieldReference global = makeGlobalRef(
-                        "script " + importedPath.toUri().toString().replace("file:///", "file:/") + ".py");
+                        "script " + PathUtil.getUriString(importedPath) + ".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
 //                int instNo = context.cfg().getCurrentInstruction();
 //                TypeReference importType = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + nameToken);

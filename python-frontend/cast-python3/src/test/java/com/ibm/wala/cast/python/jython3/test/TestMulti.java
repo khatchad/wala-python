@@ -29,11 +29,8 @@ public class TestMulti extends TestPythonCallGraphShape {
     public void testMulti1() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine("modules/multi2.py", "modules/multi1.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
-        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        CAstCallGraphUtil.AVOID_DUMP = false;
-        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
-        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
-        verifyGraphAssertions(CG, assertionsMulti1);
+        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(cg,  "silly", "inner"));
     }
 
     @Test
