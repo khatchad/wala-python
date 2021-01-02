@@ -1,2 +1,2 @@
-import pkg1.moduleD
+import pkg1
 pkg1.moduleD.func_module_d()
