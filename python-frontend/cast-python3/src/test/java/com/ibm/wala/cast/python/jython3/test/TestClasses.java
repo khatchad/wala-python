@@ -3,10 +3,14 @@ package com.ibm.wala.cast.python.jython3.test;
 import com.ibm.wala.cast.ipa.callgraph.CAstCallGraphUtil;
 import com.ibm.wala.cast.python.client.PythonAnalysisEngine;
 import com.ibm.wala.ipa.callgraph.CallGraph;
+import com.ibm.wala.ipa.callgraph.propagation.PropagationCallGraphBuilder;
 import com.ibm.wala.ipa.callgraph.propagation.SSAContextInterpreter;
 import com.ibm.wala.ipa.callgraph.propagation.SSAPropagationCallGraphBuilder;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.util.CancelException;
+import com.ibm.wala.util.NullProgressMonitor;
+import com.ibm.wala.util.WalaException;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -30,9 +34,17 @@ public class TestClasses extends TestPythonCallGraphShape {
 	 };
 	 
 	@Test
-	public void testClasses1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		CallGraph CG = process("classes1.py");
-		verifyGraphAssertions(CG, assertionsClasses1);
+	public void testClasses1() throws WalaException, IllegalArgumentException, CancelException, IOException {
+		PythonAnalysisEngine<?> engine = makeEngine("clazz/classes1.py");
+		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+		TestUtil.dumpCG(builder, cg);
+		Assert.assertTrue(hasEdge(cg,"class1.py","Outer"));
+		// FIXME
+		Assert.assertTrue(hasEdge(cg,"class1.py","self_trampoline_foo(2)"));
+		Assert.assertTrue(hasEdge(cg,"class1.py","Inner"));
+		Assert.assertTrue(hasEdge(cg,"class1.py","Inner"));
+
 	}
 
 	 protected static final Object[][] assertionsClasses2 = new Object[][] {
@@ -57,7 +69,7 @@ public class TestClasses extends TestPythonCallGraphShape {
 		    
 	@Test
 	public void testClasses2() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		CallGraph CG = process("classes2.py");
+		CallGraph CG = process("clazz/classes2.py");
 		verifyGraphAssertions(CG, assertionsClasses2);
 	}
 
@@ -103,7 +115,7 @@ public class TestClasses extends TestPythonCallGraphShape {
 	 
 	@Test
 	public void testClasses3() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		PythonAnalysisEngine<?> engine = makeEngine("classes3.py");
+		PythonAnalysisEngine<?> engine = makeEngine("clazz/classes3.py");
 		SSAPropagationCallGraphBuilder builder = (SSAPropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
 		CallGraph CG = builder.makeCallGraph(builder.getOptions());
 		System.err.println(CG);
