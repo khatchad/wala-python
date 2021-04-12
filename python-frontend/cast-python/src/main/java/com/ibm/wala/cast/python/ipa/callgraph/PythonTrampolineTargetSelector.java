@@ -90,7 +90,8 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
     public IMethod getCalleeTarget(CGNode caller, CallSiteReference site, IClass receiver) {
         if (receiver != null) {
             IClassHierarchy cha = receiver.getClassHierarchy();
-
+            int[] hashCodes = new int[] { caller.hashCode(), caller.getContext().hashCode(),site.hashCode(),receiver.hashCode() };
+            String hashCode = Integer.toHexString(hashCodes.hashCode());
             PythonInvokeInstruction call = (PythonInvokeInstruction) caller.getIR().getCalls(site)[0];
             int realParaNum = call.getNumberOfConstParameters();
             if (receiver.getAnnotations().contains(Annotation.make(PythonTypes.classMethod))
@@ -98,7 +99,7 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
             ) {
                 int defParaNum = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters();
                 Atom defFuncName = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getReference().getDeclaringClass().getName().getClassName();
-                Atom trampolineName = Atom.findOrCreateUnicodeAtom("cls_trampoline_" + defFuncName + "_" + CounterSystem.getCountHex("cls_trampoline") + "(" + call.getNumberOfTotalParameters() + ")");
+                Atom trampolineName = Atom.findOrCreateUnicodeAtom("cls_trampoline_" + defFuncName + "_" + hashCode + "(" + call.getNumberOfTotalParameters() + ")");
 
                 CalleeKey key = new CalleeKey(caller, receiver);
                 if (!wrapperBodies.containsKey(key)) {
@@ -197,7 +198,7 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
             ) {
                 int defParaNum = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters();
                 Atom defFuncName = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getReference().getDeclaringClass().getName().getClassName();
-                Atom trampolineName = Atom.findOrCreateUnicodeAtom("static_trampoline_" + defFuncName + "(" + call.getNumberOfTotalParameters() + ")");
+                Atom trampolineName = Atom.findOrCreateUnicodeAtom("static_trampoline_" + defFuncName +"_"+hashCode+ "(" + call.getNumberOfTotalParameters() + ")");
 
                 CalleeKey key = new CalleeKey(caller, receiver);
                 if (!wrapperBodies.containsKey(key)) {
@@ -255,7 +256,7 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
 
 //                    int defParaNum = ((PythonLoader.DynamicMethodBody) receiver).getCodeBody().getNumberOfParameters();
                     Atom defFuncName = receiver.getName().getClassName();
-                    Atom trampolineName = Atom.findOrCreateUnicodeAtom("self_trampoline_" + defFuncName + "(" + call.getNumberOfTotalParameters() + ")");
+                    Atom trampolineName = Atom.findOrCreateUnicodeAtom("self_trampoline_" + defFuncName +"_"+hashCode+ "(" + call.getNumberOfTotalParameters() + ")");
 
                     Map<Integer, Atom> names = HashMapFactory.make();
                     MethodReference tr = MethodReference.findOrCreate(receiver.getReference(),
@@ -312,7 +313,7 @@ public class PythonTrampolineTargetSelector implements MethodTargetSelector {
                     int defParaNum = targetCodeBody.getNumberOfParameters();
                     Atom defFuncName = targetCodeBody.getReference().getDeclaringClass().getName().getClassName();
                     Atom trampolineName = Atom.findOrCreateUnicodeAtom("args_trampoline_" + defFuncName + "_"
-                            + CounterSystem.getCountHex("arg_trampoline") + "(" + realParaNum + ")");
+                            + hashCode + "(" + realParaNum + ")");
                     MethodReference tr = MethodReference.findOrCreate(receiver.getReference(),
                             trampolineName,
                             AstMethodReference.fnDesc);

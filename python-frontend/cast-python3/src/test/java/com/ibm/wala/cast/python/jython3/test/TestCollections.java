@@ -19,7 +19,6 @@ public class TestCollections extends TestPythonCallGraphShape {
 		PythonAnalysisEngine<?> engine = makeEngine("collections/listTest1.py");
 		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
 		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-		TestUtil.dumpCG(builder, cg);
 		Assert.assertTrue(TestUtil.hasEdge(cg,  "listTest", "func2"));
 	}
 

@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Set;
 
 import static com.ibm.wala.cast.ipa.callgraph.CAstCallGraphUtil.getShortName;
@@ -57,9 +58,10 @@ public abstract class TestPythonCallGraphShape extends TestCallGraphShape {
         if (functionIdentifier.contains(":")) {
             String cls = functionIdentifier.substring(0, functionIdentifier.indexOf(":"));
             String name = functionIdentifier.substring(functionIdentifier.indexOf(":") + 1);
-            return CG.getNodes(MethodReference.findOrCreate(TypeReference.findOrCreate(PythonTypes.pythonLoader, TypeName.string2TypeName("L" + cls)), Atom.findOrCreateUnicodeAtom(name), AstMethodReference.fnDesc));
+//            return CG.getNodes(MethodReference.findOrCreate(TypeReference.findOrCreate(PythonTypes.pythonLoader, TypeName.string2TypeName("L" + cls)), Atom.findOrCreateUnicodeAtom(name), AstMethodReference.fnDesc));
+            return TestUtil.getNodes(CG, name);
         } else {
-            return CG.getNodes(MethodReference.findOrCreate(TypeReference.findOrCreate(PythonTypes.pythonLoader, TypeName.string2TypeName("L" + functionIdentifier)), AstMethodReference.fnSelector));
+            return TestUtil.getNodes(CG, functionIdentifier);
         }
     }
 
@@ -106,6 +108,9 @@ public abstract class TestPythonCallGraphShape extends TestCallGraphShape {
 
     protected static boolean hasEdge(CallGraph cg, String from, String to) {
         return TestUtil.hasEdge(cg, from, to);
+    }
+    protected static boolean hasNEdge(CallGraph cg, String from, int n) {
+        return TestUtil.hasNEdge(cg, from, n);
     }
 
     StringBuffer dump(CallGraph CG) {

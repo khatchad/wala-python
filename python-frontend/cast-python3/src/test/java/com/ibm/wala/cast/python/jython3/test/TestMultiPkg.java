@@ -1,17 +1,24 @@
 package com.ibm.wala.cast.python.jython3.test;
 
 import com.ibm.wala.cast.python.client.PythonAnalysisEngine;
+import com.ibm.wala.cast.python.global.SystemPath;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.propagation.PropagationCallGraphBuilder;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.NullProgressMonitor;
 import com.ibm.wala.util.WalaException;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 
 public class TestMultiPkg extends TestPythonCallGraphShape {
+
+    @Before
+    public void beforeTest() {
+        SystemPath.getInstance().unlockAppPath();
+    }
 
     // test pkg
     @Test
@@ -21,6 +28,7 @@ public class TestMultiPkg extends TestPythonCallGraphShape {
                 "modules/pkg1/moduleI.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        TestUtil.dumpCG(builder, cg);
         Assert.assertTrue(TestUtil.hasEdge(cg,  "from_pkg_dot_mod_import", "silly"));
         Assert.assertTrue(TestUtil.hasEdge(cg,  "silly", "inner"));
     }

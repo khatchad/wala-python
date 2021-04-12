@@ -38,7 +38,7 @@ public class TestCalls1 extends TestPythonCallGraphShape {
 
     @Test
     public void testCalls3() throws WalaException, IllegalArgumentException, CancelException, IOException {
-        PythonAnalysisEngine<?> engine = makeEngine("call1/calls31.py");
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls3.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
         Assert.assertTrue(TestUtil.hasEdge(CG,  "foo", "call"));

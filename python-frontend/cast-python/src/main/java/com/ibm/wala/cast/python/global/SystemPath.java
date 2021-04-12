@@ -12,6 +12,10 @@ public class SystemPath {
     private Path appPath;
     private boolean appPathLocked;
 
+    public void unlockAppPath() {
+        this.appPathLocked = false;
+    }
+
     public Set<Path> getLibPath() {
         return libPath;
     }
@@ -29,7 +33,7 @@ public class SystemPath {
             this.appPath = appPath;
             appPathLocked = true;
         } else {
-            System.err.println("app path setted before");
+            System.err.println("[Warning] App path is settled before");
         }
     }
 

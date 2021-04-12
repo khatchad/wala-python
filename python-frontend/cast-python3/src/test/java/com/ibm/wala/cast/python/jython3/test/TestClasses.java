@@ -17,60 +17,32 @@ import java.io.IOException;
 
 public class TestClasses extends TestPythonCallGraphShape {
 
-	 protected static final Object[][] assertionsClasses1 = new Object[][] {
-		    new Object[] { ROOT, new String[] { "script classes1.py" } },
-		    new Object[] {
-		        "script classes1.py",
-		        new String[] { "script classes1.py/Outer", 
-		        		"$script classes1.py/Outer/foo:trampoline2",
-		        		"script classes1.py/Outer/Inner", 
-		        		"$script classes1.py/Outer/Inner/foo:trampoline2" } },
-		    new Object[] {
-		    	"$script classes1.py/Outer/foo:trampoline2",
-		    	new String[] { "script classes1.py/Outer/foo" } },
-		    new Object[] {
-			    "$script classes1.py/Outer/Inner/foo:trampoline2",
-			    new String[] { "script classes1.py/Outer/Inner/foo" } }
-	 };
-	 
 	@Test
 	public void testClasses1() throws WalaException, IllegalArgumentException, CancelException, IOException {
 		PythonAnalysisEngine<?> engine = makeEngine("clazz/classes1.py");
 		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
 		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-		TestUtil.dumpCG(builder, cg);
-		Assert.assertTrue(hasEdge(cg,"class1.py","Outer"));
-		// FIXME
-		Assert.assertTrue(hasEdge(cg,"class1.py","self_trampoline_foo(2)"));
-		Assert.assertTrue(hasEdge(cg,"class1.py","Inner"));
-		Assert.assertTrue(hasEdge(cg,"class1.py","Inner"));
-
+		Assert.assertTrue(hasEdge(cg,"classes1.py","Outer"));
+		Assert.assertTrue(hasEdge(cg,"classes1.py","Inner"));
+		Assert.assertTrue(hasEdge(cg,"classes1.py","self_trampoline_foo"));
+		Assert.assertTrue(hasNEdge(cg,"classes1.py",4));
+		Assert.assertTrue(hasEdge(cg,"self_trampoline_foo","foo"));
 	}
 
-	 protected static final Object[][] assertionsClasses2 = new Object[][] {
-		    new Object[] { ROOT, new String[] { "script classes2.py" } },
-		    new Object[] {
-		        "script classes2.py",
-		        new String[] { "script classes2.py/fc",
-		        		"script classes2.py/Ctor", 
-		        		"$script classes2.py/Ctor/get:trampoline2" } },
-		    new Object[] {
-			        "script classes2.py/Ctor",
-			        new String[] { "script classes2.py/Ctor/__init__" } },
-		    new Object[] {
-			        "$script classes2.py/Ctor/get:trampoline2",
-			        new String[] { "script classes2.py/Ctor/get" } },
-		    new Object[] {
-			        "script classes2.py/Ctor/get",
-			        new String[] { "script classes2.py/fa",
-			        		 "script classes2.py/fb",
-			        		 "script classes2.py/fc"} }
-	 };
-		    
 	@Test
-	public void testClasses2() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		CallGraph CG = process("clazz/classes2.py");
-		verifyGraphAssertions(CG, assertionsClasses2);
+	public void testClasses2() throws WalaException, IllegalArgumentException, CancelException, IOException {
+		PythonAnalysisEngine<?> engine = makeEngine("clazz/classes2.py");
+		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+		Assert.assertTrue(hasEdge(cg,"fakeRootMethod","classes2"));
+		Assert.assertTrue(hasEdge(cg,"classes2","fc"));
+		Assert.assertTrue(hasEdge(cg,"classes2","Ctor"));
+		Assert.assertTrue(hasEdge(cg,"classes2","self_trampolie_get"));
+		Assert.assertTrue(hasEdge(cg,"Ctor","__init__"));
+		Assert.assertTrue(hasEdge(cg,"self_trampoline_get","get"));
+		Assert.assertTrue(hasEdge(cg,"get","fa"));
+		Assert.assertTrue(hasEdge(cg,"get","fb"));
+		Assert.assertTrue(hasEdge(cg,"get","fc"));
 	}
 
 	 protected static final Object[][] assertionsClasses3 = new Object[][] {
@@ -114,14 +86,18 @@ public class TestClasses extends TestPythonCallGraphShape {
 	 };
 	 
 	@Test
-	public void testClasses3() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
+	public void testClasses3() throws WalaException, IllegalArgumentException, CancelException, IOException {
 		PythonAnalysisEngine<?> engine = makeEngine("clazz/classes3.py");
-		SSAPropagationCallGraphBuilder builder = (SSAPropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
-		CallGraph CG = builder.makeCallGraph(builder.getOptions());
-		System.err.println(CG);
-		CAstCallGraphUtil.AVOID_DUMP = false;
-		CAstCallGraphUtil.dumpCG((SSAContextInterpreter)builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
-		verifyGraphAssertions(CG, assertionsClasses3);
+		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+		Assert.assertTrue(hasEdge(cg,"classes3","Ctor"));
+		Assert.assertTrue(hasEdge(cg,"classes3","SubCtor"));
+		Assert.assertTrue(hasEdge(cg,"classes3","OtherSubCtor"));
+		Assert.assertTrue(hasEdge(cg,"classes3","self_trampoline_get"));
+		Assert.assertTrue(hasEdge(cg,"Ctor","__init__"));
+		Assert.assertTrue(hasEdge(cg,"SubCtor","__init__"));
+		Assert.assertTrue(hasEdge(cg,"OtherSubCtor","__init__"));
+		Assert.assertTrue(hasEdge(cg,"__init__","self_trampoline"));
 	}
 
 }
