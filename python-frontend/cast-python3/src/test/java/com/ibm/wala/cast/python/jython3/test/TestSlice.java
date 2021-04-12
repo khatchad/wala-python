@@ -29,10 +29,10 @@ public class TestSlice extends TestPythonCallGraphShape {
 	
 	@Test
 	public void testSlice1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		CallGraph CG = process("slice1.py");
+		CallGraph CG = process("slice/slice1.py");
 		
-		Collection<CGNode> nodes = getNodes(CG, "script slice1.py");
-		assert nodes.size() == 1;
+		Collection<CGNode> nodes = getNodes(CG, "slice1.py");
+		assert nodes.size() >= 1;
 		
 		CGNode node = nodes.iterator().next();
 		DefUse du = node.getDU();
@@ -55,22 +55,22 @@ public class TestSlice extends TestPythonCallGraphShape {
 	}	
 	
 	 protected static final Object[][] assertionsSlice2 = new Object[][] {
-		    new Object[] { ROOT, new String[] { "script slice2.py" } },
+		    new Object[] { ROOT, new String[] {"slice2.py"} },
 		    new Object[] {
-		        "script slice2.py",
-		        new String[] { "wala/builtin/slice", "script slice2.py/a", "script slice2.py/b", "script slice2.py/c", "script slice2.py/d" } }
+					"slice2.py",
+		        new String[] { "slice", "a", "b", "c", "d" } }
 	 };
 
 	@Test
 	public void testSlice2() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		PythonAnalysisEngine<?> engine = makeEngine("slice2.py");
+		PythonAnalysisEngine<?> engine = makeEngine("slice/slice2.py");
 		SSAPropagationCallGraphBuilder builder = (SSAPropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
 		CallGraph CG = builder.makeCallGraph(builder.getOptions());
 		CAstCallGraphUtil.AVOID_DUMP = false;
 		CAstCallGraphUtil.dumpCG((SSAContextInterpreter)builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
 		verifyGraphAssertions(CG, assertionsSlice2);
 
-		Collection<CGNode> nodes = getNodes(CG, "script slice2.py");
+		Collection<CGNode> nodes = getNodes(CG, "slice2.py");
 		assert nodes.size() == 1;
 	}
 }

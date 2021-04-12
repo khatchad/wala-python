@@ -3,6 +3,7 @@ package com.ibm.wala.cast.python.global;
 import com.ibm.wala.cast.python.util.PathUtil;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -61,7 +62,8 @@ public class SystemPath {
                 // import xxx
                 importedPath = appPath.resolve(module);
             }
-            if (importedPath.toFile().isDirectory()) {
+            // FIXME isDirectory 失效
+            if (importedPath.toFile().isDirectory() || new File(importedPath.toString().replace("file:/","/")).isDirectory()) {
                 // `import lib`
                 importedPath = importedPath.resolve("__init__");
             }

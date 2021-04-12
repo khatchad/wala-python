@@ -7,6 +7,7 @@ import com.ibm.wala.ipa.callgraph.propagation.SSAContextInterpreter;
 import com.ibm.wala.ipa.callgraph.propagation.SSAPropagationCallGraphBuilder;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.util.CancelException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -14,8 +15,9 @@ import java.io.IOException;
 public class TestPrimitives extends TestPythonCallGraphShape {
 
 	@Test
+	@Ignore
 	public void testSource1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
-		PythonAnalysisEngine<?> engine = makeEngine("prim1.py");
+		PythonAnalysisEngine<?> engine = makeEngine("prim/prim1.py");
 		SSAPropagationCallGraphBuilder builder = (SSAPropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
 		CallGraph CG = builder.makeCallGraph(builder.getOptions());
 		CAstCallGraphUtil.AVOID_DUMP = false;

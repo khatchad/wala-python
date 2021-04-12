@@ -35,6 +35,7 @@ public class TestMulti extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("modules/multi2.py", "modules/from_import.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        TestUtil.dumpCG(builder, cg);
         Assert.assertTrue(TestUtil.hasEdge(cg,  "silly", "inner"));
     }
 

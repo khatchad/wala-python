@@ -28,8 +28,7 @@ public class TestMultiPkg extends TestPythonCallGraphShape {
                 "modules/pkg1/moduleI.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        TestUtil.dumpCG(builder, cg);
-        Assert.assertTrue(TestUtil.hasEdge(cg,  "from_pkg_dot_mod_import", "silly"));
+        Assert.assertTrue(TestUtil.hasEdge(cg,  "from_pkg_dot_module_import", "silly"));
         Assert.assertTrue(TestUtil.hasEdge(cg,  "silly", "inner"));
     }
 
