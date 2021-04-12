@@ -2,6 +2,7 @@ package com.ibm.wala.cast.python.jython3.test;
 
 import com.ibm.wala.cast.ipa.callgraph.CAstCallGraphUtil;
 import com.ibm.wala.cast.python.client.PythonAnalysisEngine;
+import com.ibm.wala.cast.python.global.SystemPath;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.callgraph.propagation.SSAContextInterpreter;
@@ -9,6 +10,7 @@ import com.ibm.wala.ipa.callgraph.propagation.SSAPropagationCallGraphBuilder;
 import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.ssa.*;
 import com.ibm.wala.util.CancelException;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -16,6 +18,12 @@ import java.util.Collection;
 import java.util.function.Function;
 
 public class TestSlice extends TestPythonCallGraphShape {
+
+	@Before
+	public void beforeTest() {
+		SystemPath.getInstance().unlockAppPath();
+	}
+
 
 	private static SSAAbstractInvokeInstruction find(IR ir, Function<SSAAbstractInvokeInstruction,Boolean> filter) {
 		for(SSAInstruction inst : ir.getInstructions()) {

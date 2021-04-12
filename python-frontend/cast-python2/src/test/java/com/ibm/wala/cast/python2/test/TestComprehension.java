@@ -2,6 +2,7 @@ package com.ibm.wala.cast.python2.test;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.wala.ipa.callgraph.CallGraph;
@@ -46,7 +47,8 @@ public class TestComprehension extends TestPythonCallGraphShape {
 
 	 };
 
-	@Test
+	@Ignore
+    @Test
 	public void testComp1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
 		CallGraph CG = process("comp1.py");
 		System.err.println(CG);
@@ -93,7 +95,8 @@ public class TestComprehension extends TestPythonCallGraphShape {
 				"script comp3.py/f3"} },
 	};
 
-	@Test
+	@Ignore
+    @Test
 	public void testComp3() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
 		CallGraph CG = process("comp3.py");
 		System.err.println(CG);

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.function.Function;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.wala.cast.ipa.callgraph.CAstCallGraphUtil;
@@ -32,7 +33,8 @@ public class TestSlice extends TestPythonCallGraphShape {
 		return null;
 	}
 	
-	@Test
+	@Ignore
+    @Test
 	public void testSlice1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
 		CallGraph CG = process("slice1.py");
 		
@@ -66,7 +68,8 @@ public class TestSlice extends TestPythonCallGraphShape {
 		        new String[] { "wala/builtin/slice", "script slice2.py/a", "script slice2.py/b", "script slice2.py/c", "script slice2.py/d" } }
 	 };
 
-	@Test
+	@Ignore
+    @Test
 	public void testSlice2() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
 		PythonAnalysisEngine<?> engine = makeEngine("slice2.py");
 		SSAPropagationCallGraphBuilder builder = (SSAPropagationCallGraphBuilder) engine.defaultCallGraphBuilder();

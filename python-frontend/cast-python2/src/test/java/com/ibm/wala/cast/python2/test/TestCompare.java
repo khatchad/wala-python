@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.wala.cast.python.client.PythonAnalysisEngine;
@@ -35,7 +36,8 @@ public class TestCompare extends TestPythonCallGraphShape {
 		 });
 	 }
 	 
-	@Test
+	@Ignore
+    @Test
 	public void testAssign1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
 		PythonAnalysisEngine<?> e = new PythonAnalysisEngine<Void>() {
 			@Override
@@ -88,7 +90,8 @@ public class TestCompare extends TestPythonCallGraphShape {
 	 };
 
 	 
-	@Test
+	@Ignore
+    @Test
 	public void testAssign2() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
 		PythonAnalysisEngine<?> e = new PythonAnalysisEngine<Void>() {
 			@Override

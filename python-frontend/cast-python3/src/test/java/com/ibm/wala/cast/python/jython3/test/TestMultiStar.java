@@ -31,9 +31,13 @@ public class TestMultiStar extends TestPythonCallGraphShape {
                 "caseStar/moduleO.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        CAstCallGraphUtil.AVOID_DUMP = false;
-        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
-        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+        Object[][] assertions = new Object[][]{
+                new Object[]{ROOT, new String[]{"moduleN.py", "moduleN3.py", "moduleO.py"}},
+                new Object[]{ "moduleN3.py",
+                        new String[]{"funcN", "funcO"}},
+        };
+
+        verifyGraphAssertions(CG, assertions);
     }
 
     @Test
@@ -45,10 +49,18 @@ public class TestMultiStar extends TestPythonCallGraphShape {
                 "caseStar/moduleO.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        CAstCallGraphUtil.AVOID_DUMP = false;
-        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
-        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+        Object[][] assertions = new Object[][]{
+                new Object[]{ROOT, new String[]{"moduleN.py", "moduleN3.py", "moduleN4.py", "moduleO.py"}},
+                new Object[]{
+                        "moduleN3.py",
+                        new String[]{"funcN", "funcO"}},
+                new Object[]{ "moduleN4.py",
+                        new String[]{"funcN", "funcO"}}
+        };
+
+        verifyGraphAssertions(CG, assertions);
     }
+
     @Test
     public void testStarN2() throws WalaException, IllegalArgumentException, CancelException, IOException {
         PythonAnalysisEngine<?> engine = makeEngine(
@@ -56,9 +68,14 @@ public class TestMultiStar extends TestPythonCallGraphShape {
                 "caseStar/moduleO.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        CAstCallGraphUtil.AVOID_DUMP = false;
-        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
-        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+        Object[][] assertions = new Object[][]{
+                new Object[]{ROOT, new String[]{"moduleN2.py", "moduleO.py"}},
+                new Object[]{
+                        "moduleN2.py",
+                        new String[]{"funcO"}}
+        };
+
+        verifyGraphAssertions(CG, assertions);
     }
 
     @Test
@@ -70,9 +87,17 @@ public class TestMultiStar extends TestPythonCallGraphShape {
                 "ana1.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        CAstCallGraphUtil.AVOID_DUMP = false;
-        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
-        DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
+        Object[][] assertions = new Object[][]{
+                new Object[]{ROOT, new String[]{"moduleN.py", "moduleD.py", "ana1.py"}},
+                new Object[]{
+                        "ana1.py",
+                        new String[]{"Banana"}},
+                new Object[]{
+                        "Banana",
+                        new String[]{"MAGIC_EQ"}}
+        };
+
+        verifyGraphAssertions(CG, assertions);
     }
 
 }

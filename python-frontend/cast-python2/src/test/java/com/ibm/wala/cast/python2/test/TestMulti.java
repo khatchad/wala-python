@@ -2,6 +2,7 @@ package com.ibm.wala.cast.python2.test;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ibm.wala.cast.python.client.PythonAnalysisEngine;
@@ -17,7 +18,8 @@ public class TestMulti extends TestPythonCallGraphShape {
 		new Object[] { ROOT, new String[] { "script calls1.py", "script calls2.py" } }
 	};
 
-	@Test
+	@Ignore
+    @Test
 	public void testCalls1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
 		CallGraph CG = process("calls1.py", "calls2.py");
 		verifyGraphAssertions(CG, assertionsCalls1);
@@ -29,7 +31,8 @@ public class TestMulti extends TestPythonCallGraphShape {
 		new Object[] { "script multi2.py/silly", new String[] { "script multi2.py/silly/inner" } },
 	};
 
-	@Test
+	@Ignore
+    @Test
 	public void testMulti1() throws ClassHierarchyException, IllegalArgumentException, CancelException, IOException {
 		PythonAnalysisEngine<?> engine = makeEngine("multi2.py", "multi1.py");
 		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
