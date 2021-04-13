@@ -157,6 +157,7 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
                 types.put(moduleName, tempPyScript);
             }
         }
+
         super.init(modules);
     }
 

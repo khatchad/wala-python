@@ -28,13 +28,7 @@ import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.Module;
 import com.ibm.wala.classLoader.ModuleEntry;
 import com.ibm.wala.client.AbstractAnalysisEngine;
-import com.ibm.wala.ipa.callgraph.AnalysisCacheImpl;
-import com.ibm.wala.ipa.callgraph.AnalysisOptions;
-import com.ibm.wala.ipa.callgraph.AnalysisScope;
-import com.ibm.wala.ipa.callgraph.ClassTargetSelector;
-import com.ibm.wala.ipa.callgraph.Entrypoint;
-import com.ibm.wala.ipa.callgraph.IAnalysisCacheView;
-import com.ibm.wala.ipa.callgraph.MethodTargetSelector;
+import com.ibm.wala.ipa.callgraph.*;
 import com.ibm.wala.ipa.callgraph.impl.ClassHierarchyClassTargetSelector;
 import com.ibm.wala.ipa.callgraph.impl.ClassHierarchyMethodTargetSelector;
 import com.ibm.wala.ipa.callgraph.impl.ContextInsensitiveSelector;
@@ -122,8 +116,16 @@ public abstract class PythonAnalysisEngine<T>
 
     @Override
     public IClassHierarchy buildClassHierarchy() {
+        // 添加函数摘要, 如: <subprocess/function/call>
+
+        for (String xmlFile:syntheticXMLs){
+            XMLMethodSummaryReader xml = new XMLMethodSummaryReader(
+                    getClass().getClassLoader().getResourceAsStream(xmlFile), scope);
+            for (TypeReference t : xml.getAllocatableClasses()) {
+                XmlSummaries.getInstance().add(t.getName().toString());
+            }
+        }
         try {
-//			IClassHierarchy cha = ClassHierarchyFactory.makeWithRoot(scope, loader);
             IClassHierarchy cha = SeqClassHierarchyFactory.make(scope, loader);
             Util.checkForFrontEndErrors(cha);
             setClassHierarchy(cha);

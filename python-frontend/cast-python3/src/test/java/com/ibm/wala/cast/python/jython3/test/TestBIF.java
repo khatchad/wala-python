@@ -26,7 +26,14 @@ public class TestBIF extends TestPythonCallGraphShape {
         PythonAnalysisEngine<?> engine = makeEngine("BIFs/bif_string.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
         CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-        TestUtil.dumpCG(builder, cg);
         Assert.assertTrue(TestUtil.hasEdge(cg,  "bif_string", "str"));
+    }
+
+    @Test
+    public void testPkgSummaries() throws WalaException, IllegalArgumentException, CancelException, IOException {
+        PythonAnalysisEngine<?> engine = makeEngine("BIFs/func_summaries.py");
+        PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        Assert.assertTrue(TestUtil.hasEdge(cg,  "func_summaries", "system"));
     }
 }

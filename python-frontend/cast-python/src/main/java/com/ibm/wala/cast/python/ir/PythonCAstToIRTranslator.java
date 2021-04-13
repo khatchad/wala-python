@@ -713,7 +713,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 String declareField = n.getChild(1).getChild(1).getValue().toString();
                 // FIXME BIF不走条件
 //                if (declareField.equals(declToken) && context.currentScope().isGlobal(context.currentScope().lookup(declareField))) {
-                if (declareField.equals(declToken)) {
+                if (declareField.equals(declToken) && (!XmlSummaries.getInstance().contains(declToken)) ) {
                     CAstSymbol pkgSymbol = new CAstSymbolImpl(importCAst.getChild(1).getValue().toString(), PythonCAstToIRTranslator.Any);
                     context.currentScope().declare(pkgSymbol, context.getValue(importCAst));
                 }

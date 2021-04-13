@@ -1,6 +1,6 @@
-import os
+# import os
 
-def func(a):
-    os.system(a)
+# def func(a):
+#     os.system(a)
 
-func("A")
+str("A")

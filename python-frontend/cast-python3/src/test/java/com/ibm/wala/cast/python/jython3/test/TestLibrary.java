@@ -9,6 +9,7 @@ import com.ibm.wala.ipa.cha.ClassHierarchyException;
 import com.ibm.wala.util.CancelException;
 import com.ibm.wala.util.NullProgressMonitor;
 import com.ibm.wala.util.WalaException;
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -75,13 +76,12 @@ public class TestLibrary extends TestPythonLibraryCallGraphShape {
 
     @Ignore
     @Test
-    public void testLib3() throws WalaException, IOException, CancelException {
-        PythonAnalysisEngine<?> engine = makeEngine("lib/lib3.py");
+    public void testLib4() throws WalaException, IOException, CancelException {
+        PythonAnalysisEngine<?> engine = makeEngine("call1/calls1.py");
         PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
-        CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
-
-        CAstCallGraphUtil.AVOID_DUMP = false;
-        CAstCallGraphUtil.dumpCG((SSAContextInterpreter)builder.getContextInterpreter(), builder.getPointerAnalysis(), cg);
+        CallGraph CG = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+        TestUtil.dumpCG(builder, CG);
+        Assert.assertTrue(TestUtil.hasEdge(CG,  "calls1", "foo"));
     }
 
 }
