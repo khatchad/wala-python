@@ -142,7 +142,8 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
                     }
                 }
             } else {
-                System.err.println("Not PyScriptModule");
+                System.err.println("[Error] Not PyScriptModule");
+                System.exit(1);
             }
         }
 
