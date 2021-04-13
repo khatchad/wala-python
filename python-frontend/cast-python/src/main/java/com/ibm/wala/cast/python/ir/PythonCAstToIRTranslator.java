@@ -24,6 +24,8 @@ import com.ibm.wala.cast.loader.AstMethod.DebuggingInformation;
 import com.ibm.wala.cast.loader.DynamicCallSiteReference;
 import com.ibm.wala.cast.python.global.ImportType;
 import com.ibm.wala.cast.python.global.SystemPath;
+import com.ibm.wala.cast.python.global.XmlSummaries;
+import com.ibm.wala.cast.python.ipa.summaries.BuiltinFunctions;
 import com.ibm.wala.cast.python.loader.DynamicAnnotatableEntity;
 import com.ibm.wala.cast.python.loader.PythonLoader;
 import com.ibm.wala.cast.python.parser.PythonCodeEntity;
@@ -651,16 +653,19 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                         "script " + PathUtil.getUriString(importedPath) + ".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
             } else {
-                // TODO 要找一下是否在xml变量中
-                // FIXME BIF走注释
-                Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
-                FieldReference global = makeGlobalRef(
-                        "script " + PathUtil.getUriString(importedPath) + ".py");
-                context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
-//                int instNo = context.cfg().getCurrentInstruction();
-//                TypeReference importType = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + nameToken);
-//                MethodReference call = MethodReference.findOrCreate(importType, "import", "()L" + primitiveCall.getChild(1).getValue());
-//                context.cfg().addInstruction(Python.instructionFactory().InvokeInstruction(instNo, resultVal, new int[0], context.currentScope().allocateTempValue(), CallSiteReference.make(instNo, call, Dispatch.STATIC), null));
+                if(BuiltinFunctions.builtins().contains(nameToken)|| XmlSummaries.getInstance().contains(nameToken)){
+                    // in BIF XML
+                    int instNo = context.cfg().getCurrentInstruction();
+                    TypeReference importType = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + nameToken);
+                    MethodReference call = MethodReference.findOrCreate(importType, "import", "()L" + primitiveCall.getChild(1).getValue());
+                    context.cfg().addInstruction(Python.instructionFactory().InvokeInstruction(instNo, resultVal, new int[0], context.currentScope().allocateTempValue(), CallSiteReference.make(instNo, call, Dispatch.STATIC), null));
+                } else {
+                    // in .py file
+                    Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
+                    FieldReference global = makeGlobalRef(
+                            "script " + PathUtil.getUriString(importedPath) + ".py");
+                    context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
+                }
             }
         } else if (primitiveCall.getChildCount() == 1) {
 

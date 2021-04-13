@@ -9,6 +9,7 @@ import java.util.Set;
 import com.ibm.wala.cast.ipa.callgraph.AstCFAPointerKeys;
 import com.ibm.wala.cast.ipa.callgraph.AstContextInsensitiveSSAContextInterpreter;
 import com.ibm.wala.cast.ir.ssa.AstIRFactory;
+import com.ibm.wala.cast.python.global.XmlSummaries;
 import com.ibm.wala.cast.python.ipa.callgraph.PythonConstructorTargetSelector;
 import com.ibm.wala.cast.python.ipa.callgraph.PythonSSAPropagationCallGraphBuilder;
 import com.ibm.wala.cast.python.ipa.callgraph.PythonScopeMappingInstanceKeys;
@@ -141,6 +142,7 @@ public abstract class PythonAnalysisEngine<T>
         for (TypeReference t : xml.getAllocatableClasses()) {
             BypassSyntheticClassLoader ldr = (BypassSyntheticClassLoader) cha.getLoader(scope.getSyntheticLoader());
             ldr.registerClass(t.getName(), new PythonSyntheticClass(t, cha));
+            XmlSummaries.getInstance().add(t.getName().toString());
         }
 
         MethodTargetSelector targetSelector = options.getMethodTargetSelector();
