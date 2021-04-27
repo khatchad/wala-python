@@ -163,7 +163,6 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         }
 
         String fnName = composeEntityName(context, N);
-        // FIXME 修复classmethod
         if (N.getType() instanceof CAstType.Method) {
             ((PythonLoader) loader).defineMethodType("L" + fnName, N.getPosition(), N, walaTypeNames.get(((CAstType.Method) N.getType()).getDeclaringType()), context);
         } else {
@@ -711,8 +710,6 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, declVal, fnField));
                 // 当import xxx as b的时候，不declare
                 String declareField = n.getChild(1).getChild(1).getValue().toString();
-                // FIXME BIF不走条件
-//                if (declareField.equals(declToken) && context.currentScope().isGlobal(context.currentScope().lookup(declareField))) {
                 if (declareField.equals(declToken) && (!XmlSummaries.getInstance().contains(declToken)) ) {
                     CAstSymbol pkgSymbol = new CAstSymbolImpl(importCAst.getChild(1).getValue().toString(), PythonCAstToIRTranslator.Any);
                     context.currentScope().declare(pkgSymbol, context.getValue(importCAst));

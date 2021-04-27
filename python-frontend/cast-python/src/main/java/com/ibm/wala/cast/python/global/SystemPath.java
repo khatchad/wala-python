@@ -40,7 +40,6 @@ public class SystemPath {
 
     public Path getImportModule(String scriptName, String module) {
         // if app module
-        // FIXME unix上appPath.toUri() 有问题
         if (scriptName.startsWith( PathUtil.getUriString(appPath))) {
 
             Path importScript = PathUtil.getPath(scriptName);
@@ -62,7 +61,6 @@ public class SystemPath {
                 // import xxx
                 importedPath = appPath.resolve(module);
             }
-            // FIXME isDirectory 失效
             if (importedPath.toFile().isDirectory() || new File(importedPath.toString().replace("file:/","/")).isDirectory()) {
                 // `import lib`
                 importedPath = importedPath.resolve("__init__");

@@ -13,7 +13,6 @@ import com.ibm.wala.cast.loader.CAstAbstractModuleLoader;
 import com.ibm.wala.cast.python.global.SystemPath;
 import com.ibm.wala.cast.python.ir.PythonCAstToIRTranslator;
 import com.ibm.wala.cast.python.ir.PythonLanguage;
-import com.ibm.wala.cast.python.module.PyLibURLModule;
 import com.ibm.wala.cast.python.module.PyScriptModule;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.python.util.PathUtil;

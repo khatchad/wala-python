@@ -292,7 +292,6 @@ public class BuiltinFunctions {
         builtinFunctions.put("list", Either.forLeft(PythonTypes.list));
         builtinFunctions.put("range", Either.forLeft(PythonTypes.list));
         builtinFunctions.put("sorted", Either.forLeft(PythonTypes.list));
-        // FIXME str多态，str() 为定义新对象，str(x) 为定义新函数
         builtinFunctions.put("str", Either.forLeft(PythonTypes.string));
         builtinFunctions.put("str", Either.forRight(2));
         builtinFunctions.put("sum", Either.forLeft(TypeReference.Int));

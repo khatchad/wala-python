@@ -316,7 +316,6 @@ public class PythonSuper {
 
 		@Override
 		public IMethod getCalleeTarget(CGNode caller, CallSiteReference site, IClass receiver) {
-		    //FIXME 无依赖的调用到不了这边
 			if (receiver != null && cha.lookupClass(PythonTypes.superfun).equals(receiver)) {
 				return superStub;
 			} else {
