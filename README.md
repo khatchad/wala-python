@@ -32,8 +32,7 @@ PythonInterpreter.setInterpreter((PythonInterpreter) i3.newInstance());
 
 String filename = "demo.py";
 Collection<Module> src = 
-		Collections.singleton(new SourceURLModule(
-        							new File(filename).toURL()));
+		Collections.singleton(new PyScriptModule(new File(filename).toURL()));
 PythonAnalysisEngine<Void> analysisEngine = new PythonAnalysisEngine<Void>() {
     @Override
     public Void performAnalysis(PropagationCallGraphBuilder builder) throws CancelException {
