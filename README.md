@@ -8,7 +8,7 @@ cd python-frontend
 mvn clean package
 ```
 
-*PS1: This project needs <https://github.com/juliandolby/jython3> to parse source code into AST, we already built it and put it at [here](https://github.com/Anemone95/wala-python/blob/master/python-frontend/cast-python3/libs/jython-dev.jar), but if you want to build it by your self, see [Build Jython3](#Build Jython3).*
+*PS1: This project needs <https://github.com/juliandolby/jython3> to parse source code into AST. We already built it and put it at [here](https://github.com/Anemone95/wala-python/blob/master/python-frontend/cast-python3/libs/jython-dev.jar), but if you want to build it by your self, see <a href="#Build-Jython3">Build Jython3</a>.*
 
 *PS2: I only reconstructed a part of the original one, the other code is stored in `origin_deprecated` dir. And the original project needs a dependency called [IDE](https://github.com/wala/IDE). If you want to build this, I really recommend you to use [this version](https://github.com/Anemone95/IDE.git)*
 
@@ -32,8 +32,7 @@ PythonInterpreter.setInterpreter((PythonInterpreter) i3.newInstance());
 
 String filename = "demo.py";
 Collection<Module> src = 
-		Collections.singleton(new SourceURLModule(
-        							new File(filename).toURL()));
+		Collections.singleton(new PyScriptModule(new File(filename).toURL()));
 PythonAnalysisEngine<Void> analysisEngine = new PythonAnalysisEngine<Void>() {
     @Override
     public Void performAnalysis(PropagationCallGraphBuilder builder) throws CancelException {
@@ -55,7 +54,7 @@ More demos are written in [test cases](https://github.com/Anemone95/wala-python/
 # New Features
 
 * Support `@classmethod`, `@staticmethod`
-* Support modules (`import pkg.mod`, `from pkg.mod import *`)
+* Support modules (e.g., `import pkg.mod`, `from pkg.mod import *`)
 * Support `*args` and `**kwargs`
 * Fix some bugs, e.g., function summary of `str()` , NPE
 
