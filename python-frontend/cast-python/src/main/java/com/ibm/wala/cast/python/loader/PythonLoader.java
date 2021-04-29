@@ -13,6 +13,7 @@ import com.ibm.wala.cast.loader.CAstAbstractModuleLoader;
 import com.ibm.wala.cast.python.global.SystemPath;
 import com.ibm.wala.cast.python.ir.PythonCAstToIRTranslator;
 import com.ibm.wala.cast.python.ir.PythonLanguage;
+import com.ibm.wala.cast.python.module.PyLibURLModule;
 import com.ibm.wala.cast.python.module.PyScriptModule;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.python.util.PathUtil;
@@ -130,18 +131,20 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
                 if (moduleClass == null) {
                     moduleClass = thisModuleClass;
                 } else if (!moduleClass.equals(thisModuleClass)) {
-                    System.err.println("[WARN] module type doesn't match, to ensure project root, plz use same module type");
+                    System.err.println("[WARN] module type doesn't match. To ensure project root, plz use PyScriptModule");
                 }
                 for (Iterator<? extends ModuleEntry> it = module.getEntries(); it.hasNext(); ) {
                     ModuleEntry moduleEntry = it.next();
-                    // 只能保证同一种来源
+                    // 获取项目主目录
                     Path modulePath = PathUtil.getPath(moduleEntry.getName());
                     if (rootPath == null || rootPath.toString().length() > modulePath.getParent().toString().length()) {
                         rootPath = modulePath.getParent();
                     }
                 }
+            } else if (module instanceof PyLibURLModule) {
+                continue;
             } else {
-                System.err.println("[Error] Not PyScriptModule");
+                System.err.println("[Error] Not PyScriptModule or PyLibURLModule");
                 System.exit(1);
             }
         }

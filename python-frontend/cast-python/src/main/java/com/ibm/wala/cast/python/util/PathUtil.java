@@ -27,6 +27,15 @@ public class PathUtil {
         }
     }
 
+    public static String getUriString(String path){
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("windows")){
+            return path.replace("file:///", "file:/");
+        } else {
+            return path.toString();
+        }
+    }
+
 
     public static Path getPath(URL url){
         if (System.getProperty("os.name").toLowerCase().contains("windows")){

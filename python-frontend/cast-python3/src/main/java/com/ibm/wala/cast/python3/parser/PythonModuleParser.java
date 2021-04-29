@@ -27,25 +27,25 @@ import com.ibm.wala.classLoader.SourceURLModule;
 
 public class PythonModuleParser extends PythonParser<ModuleEntry> {
 
-	private final SourceModule fileName;
+	private final SourceModule moduleName;
 	
 	protected URL getParsedURL() throws IOException {
-		return fileName.getURL();
+		return moduleName.getURL();
 	}
 
 	protected WalaPythonParser makeParser() throws IOException {
-		CharStream file = new ANTLRInputStream(fileName.getInputStream());
-		return new WalaPythonParser(file, fileName.getName(), "UTF-8");
+		CharStream file = new ANTLRInputStream(moduleName.getInputStream());
+		return new WalaPythonParser(file, moduleName.getName(), "UTF-8");
 	}
 
-	public PythonModuleParser(SourceModule fileName, CAstTypeDictionaryImpl<String> types) {
+	public PythonModuleParser(SourceModule moduleName, CAstTypeDictionaryImpl<String> types) {
 		super(types);
-		this.fileName = fileName;
+		this.moduleName = moduleName;
 	}
 
 	@Override
 	protected String scriptName() {
-		return fileName.getName();
+		return moduleName.getName();
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -58,7 +58,7 @@ public class PythonModuleParser extends PythonParser<ModuleEntry> {
 
 	@Override
 	protected Reader getReader() throws IOException {
-		return new InputStreamReader(fileName.getInputStream());
+		return new InputStreamReader(moduleName.getInputStream());
 	}
 
 }

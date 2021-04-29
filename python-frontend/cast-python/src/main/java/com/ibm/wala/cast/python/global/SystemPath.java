@@ -5,11 +5,11 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Set;
 
 public class SystemPath {
-    private Set<Path> libPath;
+    private Set<Path> libPaths;
     private Path appPath;
     private boolean appPathLocked;
 
@@ -17,12 +17,12 @@ public class SystemPath {
         this.appPathLocked = false;
     }
 
-    public Set<Path> getLibPath() {
-        return libPath;
+    public Set<Path> getLibPaths() {
+        return libPaths;
     }
 
-    public void setLibPath(Set<Path> libPath) {
-        this.libPath = libPath;
+    public void addLibPath(Path libPath) {
+        this.libPaths.add(libPath);
     }
 
     public Path getAppPath() {
@@ -40,20 +40,18 @@ public class SystemPath {
 
     public Path getImportModule(String scriptName, String module) {
         // if app module
-        if (scriptName.startsWith( PathUtil.getUriString(appPath))) {
-
+        Path importedPath = null;
+        if (scriptName.startsWith(PathUtil.getUriString(appPath))) {
             Path importScript = PathUtil.getPath(scriptName);
-
             int i = 0;
-            while (i<module.length() && module.charAt(i) == '.' ) {
+            while (i < module.length() && module.charAt(i) == '.') {
                 importScript = importScript.getParent();
                 i++;
             }
-            if (i+1<module.length()){
+            if (i + 1 < module.length()) {
                 // 防止 `from . import yyy`
                 importScript = importScript.resolve(module.substring(i));
             }
-            Path importedPath;
             if (i > 0) {
                 // from .xxx import yyy
                 importedPath = importScript;
@@ -61,14 +59,53 @@ public class SystemPath {
                 // import xxx
                 importedPath = appPath.resolve(module);
             }
-            if (importedPath.toFile().isDirectory() || new File(importedPath.toString().replace("file:/","/")).isDirectory()) {
+            if (importedPath.toFile().isDirectory() || new File(importedPath.toString().replace("file:/", "/")).isDirectory()) {
                 // `import lib`
                 importedPath = importedPath.resolve("__init__");
             }
+        }
+        if (importedPath != null && new File(importedPath.toString() + ".py").exists()) {
             return importedPath;
         }
-        System.err.println("Can't get module: " + module + " in " + appPath);
+        for (Path libPath : libPaths) {
+            // script本身就在lib中
+            if (scriptName.startsWith(PathUtil.getUriString(libPath))) {
+                Path importScript = PathUtil.getPath(scriptName);
+                int i = 0;
+                while (i < module.length() && module.charAt(i) == '.') {
+                    importScript = importScript.getParent();
+                    i++;
+                }
+                if (i + 1 < module.length()) {
+                    // 防止 `from . import yyy`
+                    importScript = importScript.resolve(module.substring(i));
+                }
+                if (i > 0) {
+                    // from .xxx import yyy
+                    importedPath = importScript;
+                } else {
+                    // import xxx
+                    importedPath = libPath.resolve(module);
+                }
+                if (importedPath.toFile().isDirectory() || new File(importedPath.toString().replace("file:/", "/")).isDirectory()) {
+                    // `import libdir`
+                    importedPath = importedPath.resolve("__init__");
+                }
+            } else if (libPath.resolve(module+".py").toFile().exists()) {
+                // `import lib`
+                importedPath = libPath.resolve(module);
+            } else if( libPath.endsWith(module) && libPath.resolve("__init__.py").toFile().exists()){
+                // `import lib`
+                importedPath = libPath.resolve("__init__");
+            }
+            if (importedPath != null && new File(importedPath.toString() + ".py").exists()) {
+                return importedPath;
+            }
+        }
+
+        System.err.println("Can't get module: " + module + " in system path");
         throw new NotImplementedException();
+
     }
 
     private static class SingletonHolder {
@@ -76,6 +113,7 @@ public class SystemPath {
     }
 
     private SystemPath() {
+        libPaths = new HashSet<>();
     }
 
     public static SystemPath getInstance() {

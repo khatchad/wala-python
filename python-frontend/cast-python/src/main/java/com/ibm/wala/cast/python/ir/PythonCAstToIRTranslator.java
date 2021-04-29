@@ -647,11 +647,13 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 MethodReference call = MethodReference.findOrCreate(importType, "import", "()L" + primitiveCall.getChild(1).getValue());
                 context.cfg().addInstruction(Python.instructionFactory().InvokeInstruction(instNo, resultVal, new int[0], context.currentScope().allocateTempValue(), CallSiteReference.make(instNo, call, Dispatch.STATIC), null));
             } else if (ImportType.INIT.equals(primitiveCall.getChild(0).getValue())) {
+                // TODO: 调用lib时要以libpath拼接
                 Path importedPath = SystemPath.getInstance().getImportModule(context.file(), "." + nameToken);
                 FieldReference global = makeGlobalRef(
-                        "script " + PathUtil.getUriString(importedPath) + ".py");
+                        "script " + PathUtil.getUriString(importedPath)+".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
             } else {
+                // TODO: 若contextfile在app，而import为lib时？
                 if(BuiltinFunctions.builtins().contains(nameToken)|| XmlSummaries.getInstance().contains(nameToken)){
                     // in BIF XML
                     int instNo = context.cfg().getCurrentInstruction();
@@ -662,7 +664,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                     // in .py file
                     Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
                     FieldReference global = makeGlobalRef(
-                            "script " + PathUtil.getUriString(importedPath) + ".py");
+                            "script " + PathUtil.getUriString(importedPath)+".py");
                     context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
                 }
             }
