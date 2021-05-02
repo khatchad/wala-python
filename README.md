@@ -31,8 +31,11 @@ Class<?> i3 = Class.forName("com.ibm.wala.cast.python3.util.Python3Interpreter")
 PythonInterpreter.setInterpreter((PythonInterpreter) i3.newInstance());
 
 String filename = "demo.py";
-Collection<Module> src = 
-		Collections.singleton(new PyScriptModule(new File(filename).toURL()));
+Collection<Module> src = new LinkedList<>();
+src.add(new PyScriptModule(getClass().getClassLoader().getResource("lib/import_subpkg1.py"))); // add script file
+src.add(new PyLibURLModule(
+                new File(Objects.requireNonNull(getClass().getClassLoader().getResource("modules/multi2.py")).getFile()))); // add library file
+
 PythonAnalysisEngine<Void> analysisEngine = new PythonAnalysisEngine<Void>() {
     @Override
     public Void performAnalysis(PropagationCallGraphBuilder builder) throws CancelException {
@@ -60,10 +63,10 @@ More demos are written in [test cases](https://github.com/Anemone95/wala-python/
 
 
 
-# Limitation
+# Limitations
 
 * Decorator is not fully supported.
-* System library is not fully supported, (1)`PyLibURLModule` waits to be realized, (2) Lack many XML summaries 
+* System library is not fully supported, ~~(1)`PyLibURLModule` waits to be realized~~, (2) Lack many XML summaries 
 * Magic methods (`__dict__()`, `__str__()`) is not supported.
 
 
