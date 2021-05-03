@@ -4,6 +4,8 @@ import com.ibm.wala.cast.python.util.PathUtil;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,7 +36,7 @@ public class SystemPath {
             this.appPath = appPath;
             appPathLocked = true;
         } else {
-            System.err.println("[Warning] App path is settled before");
+            System.err.println("[WARNING] App path is settled before");
         }
     }
 
@@ -102,9 +104,10 @@ public class SystemPath {
                 return importedPath;
             }
         }
+        System.err.println("[WARNING] Can't get module: " + module + " in system path, treat it as black box module");
+        return new File("UNKNOWN_"+module).toPath();
 
-        System.err.println("Can't get module: " + module + " in system path");
-        throw new NotImplementedException();
+//        throw new NotImplementedException();
 
     }
 

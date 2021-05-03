@@ -21,12 +21,29 @@ import static com.ibm.wala.cast.ipa.callgraph.CAstCallGraphUtil.getShortName;
 public class TestUtil {
     public static void dumpCG(PropagationCallGraphBuilder builder, CallGraph CG) throws WalaException {
         CAstCallGraphUtil.AVOID_DUMP = false;
-        CAstCallGraphUtil.dumpCG((SSAContextInterpreter)builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
+        CAstCallGraphUtil.dumpCG((SSAContextInterpreter) builder.getContextInterpreter(), builder.getPointerAnalysis(), CG);
         DotUtil.dotify(CG, null, PDFTypeHierarchy.DOT_FILE, "callgraph.pdf", "dot");
     }
 
+    public static String getSSA(PropagationCallGraphBuilder builder, CallGraph cg) {
+        StringBuilder sb = new StringBuilder();
+        for (CGNode N : cg) {
+            boolean fst = true;
+            for (CGNode n : Iterator2Iterable.make(cg.getSuccNodes(N))) {
+                if (fst) fst = false;
+                else sb.append(", ");
+                sb.append(getShortName(n));
+            }
+            IRView ir = ((SSAContextInterpreter) builder.getContextInterpreter()).getIRView(N);
+            if (ir != null) {
+                sb.append(ir);
+            }
+        }
+        return sb.toString();
+    }
+
     public static boolean hasNEdge(CallGraph CG, String from, int num) {
-        int cnt=0;
+        int cnt = 0;
         for (CGNode N : CG) {
             if (getShortName(N).startsWith(from)) {
                 for (CGNode n : Iterator2Iterable.make(CG.getSuccNodes(N))) {
@@ -34,13 +51,13 @@ public class TestUtil {
                 }
             }
         }
-        return cnt>=num;
+        return cnt >= num;
     }
 
-    public static Collection<CGNode> getNodes(CallGraph CG, String node){
-        Collection<CGNode> cgNodes=new LinkedList<>();
+    public static Collection<CGNode> getNodes(CallGraph CG, String node) {
+        Collection<CGNode> cgNodes = new LinkedList<>();
         for (CGNode n : CG) {
-            if (getShortName(n).startsWith(node)||getShortName(n).endsWith(node)) {
+            if (getShortName(n).startsWith(node) || getShortName(n).endsWith(node)) {
                 cgNodes.add(n);
             }
         }
@@ -53,7 +70,7 @@ public class TestUtil {
                 boolean fst = true;
                 for (CGNode n : Iterator2Iterable.make(CG.getSuccNodes(N))) {
                     if (fst) fst = false;
-                    if (getShortName(n).startsWith(to)){
+                    if (getShortName(n).startsWith(to)) {
                         return true;
                     }
                 }

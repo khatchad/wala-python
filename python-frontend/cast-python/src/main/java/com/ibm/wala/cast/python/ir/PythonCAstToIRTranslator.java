@@ -284,6 +284,20 @@ public class PythonCAstToIRTranslator extends AstTranslator {
     }
 
     @Override
+    protected void leaveClassStmt(CAstNode n, WalkContext context, CAstVisitor<WalkContext> visitor) {
+        super.leaveClassStmt(n, context, visitor);
+        CAstEntity fn = (CAstEntity) n.getChild(0).getValue();
+
+//        declareFunction(fn, context);
+//        int result = context.currentScope().allocateTempValue();
+//        int ex = context.currentScope().allocateTempValue();
+//        String fnName = composeEntityName(context, fn);
+//        doGlobalWrite(context, fnName, PythonTypes.Root, result);
+//        FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(fn.getName()), PythonTypes.Root);
+//        context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, result+1, fnField));
+    }
+
+    @Override
     protected void doMaterializeFunction(CAstNode node, WalkContext context, int result, int exception, CAstEntity fn) {
 
         String fnName = composeEntityName(context, fn);
@@ -381,15 +395,18 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         }
     }
 
-//	@Override
-//	protected void leaveVarAssign(CAstNode n, CAstNode v, CAstNode a, WalkContext c, CAstVisitor<WalkContext> visitor) {
-//		WalkContext context = c;
-//		int rval = c.getValue(v);
-//		String nm = (String) n.getChild(0).getValue();
-//		Symbol ls = context.currentScope().lookup(nm);
-//		c.setValue(n, rval);
-//		assignValue(n, context, ls, nm, rval);
-//	}
+    @Override
+    protected void leaveVarAssign(CAstNode n, CAstNode v, CAstNode a, WalkContext c, CAstVisitor<WalkContext> visitor) {
+        super.leaveVarAssign(n, v, a, c, visitor);
+        WalkContext context = c;
+        int rval = c.getValue(v);
+        String nm = (String) n.getChild(0).getValue();
+        // script的var要put
+        if (context.getName().endsWith(".py")) {
+            FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(nm), PythonTypes.Root);
+            context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, rval, fnField));
+        }
+    }
 
     @Override
     protected void assignValue(CAstNode n, WalkContext context, Symbol ls, String nm, int rval) {
@@ -442,6 +459,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
         }
     }
 
+    // after visit class
     @Override
     protected void leaveTypeEntity(CAstEntity n, WalkContext context, WalkContext typeContext, CAstVisitor<WalkContext> visitor) {
         super.leaveTypeEntity(n, context, typeContext, visitor);
@@ -458,6 +476,11 @@ public class PythonCAstToIRTranslator extends AstTranslator {
 
         doLocalWrite(code, n.getType().getName(), type, v);
         doGlobalWrite(code, fnName, PythonTypes.Root, v);
+        // script的class要put
+        if (context.getName().endsWith(".py")) {
+            FieldReference fnField = FieldReference.findOrCreate(PythonTypes.Root, Atom.findOrCreateUnicodeAtom(n.getType().getName()), PythonTypes.Root);
+            context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, v, fnField));
+        }
 
         if (!this.entity2ExposedNames.containsKey(context.top())) {
             this.entity2ExposedNames.put(context.top(), HashSetFactory.make());
@@ -485,6 +508,21 @@ public class PythonCAstToIRTranslator extends AstTranslator {
             code.cfg().addInstruction(Python.instructionFactory().PutInstruction(code.cfg().getCurrentInstruction(), v, val, fr));
         }
     }
+
+    @Override
+    protected void leaveFileEntity(
+            CAstEntity n,
+            WalkContext context,
+            WalkContext fileContext,
+            CAstVisitor<WalkContext> visitor) {
+        super.leaveFileEntity(n, context, fileContext, visitor);
+    }
+
+    @Override
+    protected void leaveScriptEntity(CAstEntity n, WalkContext context, WalkContext codeContext, CAstVisitor<WalkContext> visitor) {
+        super.leaveScriptEntity(n, context, codeContext, visitor);
+    }
+
 
     @Override
     protected void doNewObject(WalkContext context, CAstNode newNode, int result, Object type, int[] arguments) {
@@ -543,9 +581,9 @@ public class PythonCAstToIRTranslator extends AstTranslator {
             CAstNode cl = call.getChild(i);
             if (cl.getKind() == CAstNode.ARRAY_LITERAL) {
                 // kwargs
-                if(cl.getChild(0).getValue()==null){
+                if (cl.getChild(0).getValue() == null) {
                     // **kwargs
-                    kwargsVal=context.getValue(cl.getChild(1));
+                    kwargsVal = context.getValue(cl.getChild(1));
                 } else {
                     // kwargs
                     keyp.add(Pair.make(String.valueOf(cl.getChild(0).getValue()), context.getValue(cl.getChild(1))));
@@ -650,11 +688,11 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 // TODO: 调用lib时要以libpath拼接
                 Path importedPath = SystemPath.getInstance().getImportModule(context.file(), "." + nameToken);
                 FieldReference global = makeGlobalRef(
-                        "script " + PathUtil.getUriString(importedPath)+".py");
+                        "script " + PathUtil.getUriString(importedPath) + ".py");
                 context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
             } else {
                 // TODO: 若contextfile在app，而import为lib时？
-                if(BuiltinFunctions.builtins().contains(nameToken)|| XmlSummaries.getInstance().contains(nameToken)){
+                if (BuiltinFunctions.builtins().contains(nameToken) || XmlSummaries.getInstance().contains(nameToken)) {
                     // in BIF XML
                     int instNo = context.cfg().getCurrentInstruction();
                     TypeReference importType = TypeReference.findOrCreate(PythonTypes.pythonLoader, "L" + nameToken);
@@ -664,7 +702,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                     // in .py file
                     Path importedPath = SystemPath.getInstance().getImportModule(context.file(), nameToken);
                     FieldReference global = makeGlobalRef(
-                            "script " + PathUtil.getUriString(importedPath)+".py");
+                            "script " + PathUtil.getUriString(importedPath) + ".py");
                     context.cfg().addInstruction(new AstGlobalRead(context.cfg().getCurrentInstruction(), resultVal, global));
                 }
             }
@@ -712,7 +750,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 context.cfg().addInstruction(Python.instructionFactory().PutInstruction(context.cfg().getCurrentInstruction(), 1, declVal, fnField));
                 // 当import xxx as b的时候，不declare
                 String declareField = n.getChild(1).getChild(1).getValue().toString();
-                if (declareField.equals(declToken) && (!XmlSummaries.getInstance().contains(declToken)) ) {
+                if (declareField.equals(declToken) && (!XmlSummaries.getInstance().contains(declToken))) {
                     CAstSymbol pkgSymbol = new CAstSymbolImpl(importCAst.getChild(1).getValue().toString(), PythonCAstToIRTranslator.Any);
                     context.currentScope().declare(pkgSymbol, context.getValue(importCAst));
                 }
@@ -867,7 +905,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
 
     @Override
     protected Position[] getParameterPositions(CAstEntity e) {
-        Position[] ps = new Position[Math.max(1,e.getArgumentCount())];
+        Position[] ps = new Position[Math.max(1, e.getArgumentCount())];
         for (int i = 1; i < e.getArgumentCount(); i++) {
             ps[i] = e.getPosition(i);
         }

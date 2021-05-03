@@ -406,22 +406,42 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
                 return cast.makeNode(CAstNode.EMPTY);
             } else {
                 java.util.List<CAstNode> nodes = new ArrayList<CAstNode>();
-                if (arg0.getInternalTargets().size() > 1) {
-                    CAstNode rval =
-                            cast.makeNode(CAstNode.DECL_STMT,
-                                    cast.makeConstant(new CAstSymbolImpl(rvalName, PythonCAstToIRTranslator.Any)),
-                                    v);
-                    nodes.add(rval);
-                    for (expr lhs : arg0.getInternalTargets()) {
-                        nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), cast.makeNode(CAstNode.VAR, cast.makeConstant(rvalName))), lhs));
-                    }
-                } else {
-                    for (expr lhs : arg0.getInternalTargets()) {
-                        nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), v), lhs));
-                    }
+//                if (arg0.getParent().toString().equals("Module")){
+//                    if (arg0.getInternalTargets().size() > 1) {
+//                        CAstNode rval =
+//                                cast.makeNode(CAstNode.DECL_STMT,
+//                                        cast.makeConstant(new CAstSymbolImpl(rvalName, PythonCAstToIRTranslator.Any)),
+//                                        v);
+//                        nodes.add(rval);
+//                        for (expr lhs : arg0.getInternalTargets()) {
+//                            nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), cast.makeNode(CAstNode.VAR, cast.makeConstant(rvalName))), lhs));
+//                        }
+//                    } else {
+//                        for (expr lhs : arg0.getInternalTargets()) {
+//                            CAstNode node=cast.makeNode(CAstNode.DECL_STMT, cast.makeConstant(new CAstSymbolImpl(lhs.getText(), PythonCAstToIRTranslator.Any)),v);
+//
+//                            nodes.add(notePosition(node,lhs));
+//                        }
+//                    }
+//                    return cast.makeNode(CAstNode.BLOCK_EXPR, nodes.toArray(new CAstNode[nodes.size()]));
+//                } else {
+                    if (arg0.getInternalTargets().size() > 1) {
+                        CAstNode rval =
+                                cast.makeNode(CAstNode.DECL_STMT,
+                                        cast.makeConstant(new CAstSymbolImpl(rvalName, PythonCAstToIRTranslator.Any)),
+                                        v);
+                        nodes.add(rval);
+                        for (expr lhs : arg0.getInternalTargets()) {
+                            nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), cast.makeNode(CAstNode.VAR, cast.makeConstant(rvalName))), lhs));
+                        }
+                    } else {
+                        for (expr lhs : arg0.getInternalTargets()) {
+                            nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), v), lhs));
+                        }
 
-                }
-                return cast.makeNode(CAstNode.BLOCK_EXPR, nodes.toArray(new CAstNode[nodes.size()]));
+                    }
+                    return cast.makeNode(CAstNode.BLOCK_EXPR, nodes.toArray(new CAstNode[nodes.size()]));
+//                }
             }
         }
 
