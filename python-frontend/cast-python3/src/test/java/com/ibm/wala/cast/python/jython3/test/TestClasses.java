@@ -108,4 +108,12 @@ public class TestClasses extends TestPythonCallGraphShape {
 		Assert.assertTrue(hasEdge(cg,"__init__","self_trampoline"));
 	}
 
+
+	@Test
+	public void testClasses4() throws WalaException, IllegalArgumentException, CancelException, IOException {
+		PythonAnalysisEngine<?> engine = makeEngine("clazz/classes4.py");
+		PropagationCallGraphBuilder builder = (PropagationCallGraphBuilder) engine.defaultCallGraphBuilder();
+		CallGraph cg = builder.makeCallGraph(engine.getOptions(), new NullProgressMonitor());
+		TestUtil.dumpCG(builder,cg);
+	}
 }

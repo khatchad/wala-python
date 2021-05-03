@@ -113,6 +113,7 @@ public class PythonInvokeInstruction extends SSAAbstractInvokeInstruction {
                 return kwargsVal;
             }
         } else {
+            // FIXME class init invoke
             assert j < getNumberOfUses();
             return kwargsVal;
         }

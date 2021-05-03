@@ -752,7 +752,10 @@ public class PythonCAstToIRTranslator extends AstTranslator {
                 String declareField = n.getChild(1).getChild(1).getValue().toString();
                 if (declareField.equals(declToken) && (!XmlSummaries.getInstance().contains(declToken))) {
                     CAstSymbol pkgSymbol = new CAstSymbolImpl(importCAst.getChild(1).getValue().toString(), PythonCAstToIRTranslator.Any);
-                    context.currentScope().declare(pkgSymbol, context.getValue(importCAst));
+                    String nm = pkgSymbol.name();
+                    if (!context.currentScope().contains(nm)) {
+                        context.currentScope().declare(pkgSymbol, context.getValue(importCAst));
+                    }
                 }
             }
         }
