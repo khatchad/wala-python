@@ -1,10 +1,7 @@
 package com.ibm.wala.cast.python.client;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import com.ibm.wala.cast.ipa.callgraph.AstCFAPointerKeys;
 import com.ibm.wala.cast.ipa.callgraph.AstContextInsensitiveSSAContextInterpreter;
@@ -20,6 +17,8 @@ import com.ibm.wala.cast.python.ipa.summaries.PythonSuper;
 import com.ibm.wala.cast.python.loader.PythonAnalysisScope;
 import com.ibm.wala.cast.python.loader.PythonLoaderFactory;
 import com.ibm.wala.cast.python.loader.PythonSyntheticClass;
+import com.ibm.wala.cast.python.module.PyLibURLModule;
+import com.ibm.wala.cast.python.module.PyScriptModule;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.cast.types.AstMethodReference;
 import com.ibm.wala.cast.util.Util;
@@ -106,6 +105,23 @@ public abstract class PythonAnalysisEngine<T>
     }
 
     @Override
+    public void setModuleFiles(Collection<? extends Module> moduleFiles) {
+        this.moduleFiles=new LinkedList<>();
+        List<Module> moduleList=new LinkedList<>();
+        for (Module o : moduleFiles) {
+            if (o instanceof PyLibURLModule){
+                moduleList.add(o);
+            }
+        }
+        for (Module o : moduleFiles) {
+            if (o instanceof PyScriptModule){
+                moduleList.add(o);
+            }
+        }
+        this.moduleFiles=moduleList;
+    }
+
+    @Override
     public void buildAnalysisScope() throws IOException {
         scope = new PythonAnalysisScope();
 
@@ -186,7 +202,8 @@ public abstract class PythonAnalysisEngine<T>
 
     @Override
     protected Iterable<Entrypoint> makeDefaultEntrypoints(AnalysisScope scope, IClassHierarchy cha) {
-        Set<Entrypoint> result = HashSetFactory.make();
+//        Set<Entrypoint> result = HashSetFactory.make();
+        List<Entrypoint> result = new LinkedList();
         for (Module m : moduleFiles) {
             IClass entry = cha.lookupClass(TypeReference.findOrCreate(PythonTypes.pythonLoader, TypeName.findOrCreate(scriptName(m))));
             assert entry != null : "bad root name " + scriptName(m) + ":\n" + cha;
