@@ -66,7 +66,10 @@ public class SystemPath {
                 importedPath = importedPath.resolve("__init__");
             }
         }
-        if (importedPath != null && new File(importedPath.toString() + ".py").exists()) {
+        if (importedPath != null && (
+                new File(importedPath.toString() + ".py").exists() ||
+                        new File(importedPath.toString().replace("file:/","/") + ".py").exists())
+        ) {
             return importedPath;
         }
         for (Path libPath : libPaths) {
@@ -93,14 +96,20 @@ public class SystemPath {
                     // `import libdir`
                     importedPath = importedPath.resolve("__init__");
                 }
-            } else if (libPath.resolve(module+".py").toFile().exists()) {
+            } else if (libPath.resolve(module+".py").toFile().exists()||
+                    new File(libPath.resolve(module+".py").toString().replace("file:/","/")).exists()
+            ) {
                 // `import lib`
                 importedPath = libPath.resolve(module);
-            } else if( libPath.endsWith(module) && libPath.resolve("__init__.py").toFile().exists()){
+            } else if( libPath.endsWith(module) && (libPath.resolve("__init__.py").toFile().exists()||
+                    new File(libPath.resolve("__init__.py").toString().replace("file:/","/")).exists()
+            ) ){
                 // `import lib`
                 importedPath = libPath.resolve("__init__");
             }
-            if (importedPath != null && new File(importedPath.toString() + ".py").exists()) {
+            if (importedPath != null && (new File(importedPath.toString() + ".py").exists()||
+                    (new File(importedPath.toString().replace("file:/","/") + ".py")).exists()
+            )) {
                 return importedPath;
             }
         }
