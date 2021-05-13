@@ -68,6 +68,7 @@ More demos are written in [test cases](https://github.com/Anemone95/wala-python/
 * Decorator is not fully supported.
 * System library is not fully supported, ~~(1)`PyLibURLModule` waits to be realized~~, (2) Lack many XML summaries 
 * Magic methods (`__dict__()`, `__str__()`) is not supported.
+* Some operators (like `in`) is not fully supported.
 
 
 # Original Readme

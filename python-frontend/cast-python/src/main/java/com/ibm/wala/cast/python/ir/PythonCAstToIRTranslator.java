@@ -141,6 +141,7 @@ public class PythonCAstToIRTranslator extends AstTranslator {
 
     @Override
     protected IOperator translateBinaryOpcode(CAstNode op) {
+        // FIXME @Anemone, operator "in" or "not in" can't be simply replaced with "add".
         if (CAstOperator.OP_IN == op || CAstOperator.OP_NOT_IN == op || CAstOperator.OP_POW == op) {
             return IBinaryOpInstruction.Operator.ADD;
         } else {

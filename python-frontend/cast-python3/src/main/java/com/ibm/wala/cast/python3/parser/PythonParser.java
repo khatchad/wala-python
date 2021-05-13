@@ -314,8 +314,8 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
 
                     @Override
                     public String getString() {
-                        StringBuilder sb=new StringBuilder();
-                        for (PythonTree pt:p){
+                        StringBuilder sb = new StringBuilder();
+                        for (PythonTree pt : p) {
                             sb.append(pt.getText());
                         }
                         return sb.toString();
@@ -425,22 +425,22 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
 //                    }
 //                    return cast.makeNode(CAstNode.BLOCK_EXPR, nodes.toArray(new CAstNode[nodes.size()]));
 //                } else {
-                    if (arg0.getInternalTargets().size() > 1) {
-                        CAstNode rval =
-                                cast.makeNode(CAstNode.DECL_STMT,
-                                        cast.makeConstant(new CAstSymbolImpl(rvalName, PythonCAstToIRTranslator.Any)),
-                                        v);
-                        nodes.add(rval);
-                        for (expr lhs : arg0.getInternalTargets()) {
-                            nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), cast.makeNode(CAstNode.VAR, cast.makeConstant(rvalName))), lhs));
-                        }
-                    } else {
-                        for (expr lhs : arg0.getInternalTargets()) {
-                            nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), v), lhs));
-                        }
-
+                if (arg0.getInternalTargets().size() > 1) {
+                    CAstNode rval =
+                            cast.makeNode(CAstNode.DECL_STMT,
+                                    cast.makeConstant(new CAstSymbolImpl(rvalName, PythonCAstToIRTranslator.Any)),
+                                    v);
+                    nodes.add(rval);
+                    for (expr lhs : arg0.getInternalTargets()) {
+                        nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), cast.makeNode(CAstNode.VAR, cast.makeConstant(rvalName))), lhs));
                     }
-                    return cast.makeNode(CAstNode.BLOCK_EXPR, nodes.toArray(new CAstNode[nodes.size()]));
+                } else {
+                    for (expr lhs : arg0.getInternalTargets()) {
+                        nodes.add(notePosition(cast.makeNode(CAstNode.ASSIGN, notePosition(lhs.accept(this), lhs), v), lhs));
+                    }
+
+                }
+                return cast.makeNode(CAstNode.BLOCK_EXPR, nodes.toArray(new CAstNode[nodes.size()]));
 //                }
             }
         }
@@ -733,7 +733,7 @@ abstract public class PythonParser<T> extends AbstractTransToCAst<T> {
                 CAstNode compareExpr;
                 compareExpr =
                         op == CAstOperator.OP_IN ?
-                                cast.makeNode(CAstNode.IS_DEFINED_EXPR, cast.makeNode(CAstNode.VAR, cast.makeConstant(cmpTemp)), lhs) :
+                                cast.makeNode(CAstNode.BINARY_EXPR, op, lhs, cast.makeNode(CAstNode.VAR, cast.makeConstant(cmpTemp))) :
                                 op == CAstOperator.OP_NOT_IN ?
                                         cast.makeNode(CAstNode.UNARY_EXPR, CAstOperator.OP_NOT,
                                                 cast.makeNode(CAstNode.IS_DEFINED_EXPR, cast.makeNode(CAstNode.VAR, cast.makeConstant(cmpTemp)), lhs)) :
