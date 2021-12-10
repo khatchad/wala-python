@@ -298,6 +298,7 @@ public class BuiltinFunctions {
         builtinFunctions.put("type", Either.forLeft(PythonTypes.object));
         builtinFunctions.put("zip", Either.forLeft(PythonTypes.list));
         builtinFunctions.put("slice", Either.forRight(2));
+        builtinFunctions.put("unknownObject", Either.forLeft(PythonTypes.UnknownObject));
     }
 
     public static Set<String> builtins() {

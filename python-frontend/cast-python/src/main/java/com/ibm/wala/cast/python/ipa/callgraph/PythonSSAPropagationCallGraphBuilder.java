@@ -10,9 +10,7 @@
  *****************************************************************************/
 package com.ibm.wala.cast.python.ipa.callgraph;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 import com.ibm.wala.cast.ipa.callgraph.AstSSAPropagationCallGraphBuilder;
 import com.ibm.wala.cast.ipa.callgraph.GlobalObjectKey;
@@ -22,6 +20,7 @@ import com.ibm.wala.cast.python.ssa.PythonInstructionVisitor;
 import com.ibm.wala.cast.python.ssa.PythonInvokeInstruction;
 import com.ibm.wala.cast.python.types.PythonTypes;
 import com.ibm.wala.classLoader.IField;
+import com.ibm.wala.classLoader.NewSiteReference;
 import com.ibm.wala.fixpoint.AbstractOperator;
 import com.ibm.wala.ipa.callgraph.AnalysisOptions;
 import com.ibm.wala.ipa.callgraph.CGNode;
@@ -177,6 +176,21 @@ public class PythonSSAPropagationCallGraphBuilder extends AstSSAPropagationCallG
         @Override
         public void visitPythonInvoke(PythonInvokeInstruction inst) {
             visitInvokeInternal(inst, new DefaultInvariantComputer());
+            // if it invokes a blackbox function, create a new heap object.
+            PointerKey lhs = getPointerKeyForLocal(inst.getReturnValue(0));
+            PointsToSetVariable pointsToSet = getBuilder().getSystem().findOrCreatePointsToSet(lhs);
+            if (pointsToSet.getOrderNumber()==0){
+
+                NewSiteReference ref = NewSiteReference.make(inst.getProgramCounter(), PythonTypes.UnknownObject);
+                InstanceKey iKey = getInstanceKeyForAllocation(ref);
+
+                if (!contentsAreInvariant(symbolTable, du, inst.getDef())) {
+                    system.newConstraint(lhs, iKey);
+                } else {
+                    system.findOrCreateIndexForInstanceKey(iKey);
+                    system.recordImplicitPointsToSet(lhs);
+                }
+            }
         }
 
         @Override
@@ -307,6 +321,7 @@ public class PythonSSAPropagationCallGraphBuilder extends AstSSAPropagationCallG
             // return values
             PointerKey rret = getPointerKeyForReturnValue(target);
             PointerKey lret = getPointerKeyForLocal(caller, call.getReturnValue(0));
+            // link return value to left value
             getSystem().newConstraint(lret, assignOperator, rret);
         }
     }

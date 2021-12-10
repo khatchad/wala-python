@@ -41,6 +41,7 @@ import com.ibm.wala.util.collections.HashSetFactory;
 import com.ibm.wala.util.strings.Atom;
 
 import static com.ibm.wala.cast.python.types.PythonTypes.EmptyPyScript;
+import static com.ibm.wala.cast.python.types.PythonTypes.UnknownObject;
 
 public abstract class PythonLoader extends CAstAbstractModuleLoader {
 
@@ -216,6 +217,7 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
         return new PythonCAstToIRTranslator(this);
     }
 
+    // add built-in object in classloader
     final CoreClass CodeBody = new CoreClass(PythonTypes.CodeBody.getName(), PythonTypes.rootTypeName, this, null);
     final CoreClass lambda = new CoreClass(PythonTypes.lambda.getName(), PythonTypes.CodeBody.getName(), this, null);
     final CoreClass filter = new CoreClass(PythonTypes.filter.getName(), PythonTypes.CodeBody.getName(), this, null);
@@ -228,6 +230,7 @@ public abstract class PythonLoader extends CAstAbstractModuleLoader {
     final CoreClass string = new CoreClass(PythonTypes.string.getName(), PythonTypes.object.getName(), this, null);
     final CoreClass trampoline = new CoreClass(PythonTypes.trampoline.getName(), PythonTypes.CodeBody.getName(), this, null);
     final CoreClass superfun = new CoreClass(PythonTypes.superfun.getName(), PythonTypes.CodeBody.getName(), this, null);
+    final CoreClass unknownObject = new CoreClass(UnknownObject.getName(), object.getName(), this, null);
 
     public PythonLoader(IClassHierarchy cha, IClassLoader parent) {
         super(cha, parent);

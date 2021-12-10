@@ -36,6 +36,9 @@ public class PythonTypes extends AstTypeReference {
 
     public static final TypeReference EmptyPyScript = TypeReference.findOrCreate(pythonLoader, TypeName.findOrCreate("LEmptyPyScript"));
 
+    // black-box function returns unknown object
+    public static final TypeReference UnknownObject = TypeReference.findOrCreate(pythonLoader, TypeName.findOrCreate("LUnknownObject"));
+
     public static final TypeReference Exception = TypeReference.findOrCreate(pythonLoader, TypeName.findOrCreate("LException"));
 
     public static final TypeReference CodeBody = TypeReference.findOrCreate(pythonLoader, TypeName.findOrCreate("LCodeBody"));
